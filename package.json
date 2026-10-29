@@ -1,6 +1,6 @@
 {
   "name": "megacity-developers",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A two-player mobile deck-builder about rival skyscraper developers who draft from a shared pool.",
   "scripts": {
     "dev": "vite",

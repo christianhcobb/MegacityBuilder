@@ -58,6 +58,7 @@ svg{display:block}
 .app{height:100%;max-width:520px;margin:0 auto;display:grid;grid-template-rows:auto auto 1fr auto auto;gap:6px;padding-block:6px}
 .topbar{display:flex;align-items:center;gap:10px}
 .topbar h1{font:700 20px/1 var(--display);margin:0;text-transform:uppercase;color:#fff;-webkit-text-stroke:1.5px var(--line);paint-order:stroke fill;text-shadow:0 3px 0 var(--line)}
+.topbar .evt{display:none}
 .topbar .round{font:800 12px var(--body);color:var(--fg);margin-left:auto;background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:3px 10px}
 .icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--panel);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:16px}
 .icon:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
@@ -352,3 +353,30 @@ svg{display:block}
   .toast{bottom:160px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* natures */
+.card .kw{display:flex;flex-wrap:wrap;gap:3px}
+.card .kw .k{font:800 8px var(--body);text-transform:uppercase;letter-spacing:.05em;padding:1px 5px;border-radius:5px;border:1.5px solid var(--line);background:var(--panel2);color:var(--fg)}
+.card .kw .k-exhaust{background:#ffe3ea} .card .kw .k-prestige{background:#f0e2fb} .card .kw .k-retain{background:#fff3d1} .card .kw .k-hq{background:#e1eefc} .card .kw .k-ground{background:#e3f6e6} .card .kw .k-top{background:#fde6dc}
+/* shuffle */
+.flyer.stack3{box-shadow:-3px 3px 0 -1px #3a4060,-6px 6px 0 -2px #2b2f44,0 3px 0 var(--line);transform-style:preserve-3d;backface-visibility:visible}
+.pile.riffle .stack{animation:riffle .5s ease-out}
+@keyframes riffle{0%{transform:translateY(-6px) rotate(-6deg)}30%{transform:translateY(2px) rotate(4deg)}60%{transform:translateY(-2px) rotate(-2deg)}100%{transform:none}}
+/* turn ceremony */
+.turnbanner{position:fixed;left:0;right:0;top:40%;z-index:50;display:flex;justify-content:center;align-items:center;gap:12px;padding:12px 16px;background:var(--line);color:#fff;transform:translateY(-50%);animation:bannerin .45s cubic-bezier(.2,1.4,.4,1);pointer-events:none;box-shadow:0 8px 0 rgba(0,0,0,.25)}
+.turnbanner.theirs{background:#2b2f44} .turnbanner.mine{background:var(--blue)}
+.turnbanner .pf{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:none;border:2.5px solid #fff}
+.turnbanner .pf svg{width:100%;height:100%}
+.turnbanner .tb b{display:block;font:700 26px/1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.turnbanner .tb small{font:800 12px var(--body);opacity:.85}
+.turnbanner.out{animation:bannerout .3s forwards}
+@keyframes bannerin{from{transform:translateY(-50%) translateX(-110%)}to{transform:translateY(-50%) translateX(0)}}
+@keyframes bannerout{to{transform:translateY(-50%) translateX(110%);opacity:0}}
+.draftshow{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:48;display:flex;flex-direction:column;align-items:center;gap:6px;animation:pop .4s cubic-bezier(.2,1.6,.4,1);pointer-events:none}
+.draftshow .card{width:130px;height:168px;flex:none;margin:0;box-shadow:0 10px 0 var(--line),0 20px 40px rgba(0,0,0,.35)}
+.draftshow small{font:800 12px var(--body);color:#fff;background:#2f8f45;border:2px solid var(--line);border-radius:999px;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+/* logs */
+.tile.live{cursor:pointer;opacity:1;color:var(--fg);background:#fff}
+.tile.live .ti{font:700 24px var(--display);line-height:28px}
+.logrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:2px dashed var(--panel2);font-size:12px}
+.logrow small{color:var(--muted)}
