@@ -2,7 +2,7 @@
 
 ## 1.1.0 — 2026-10-29
 Playtest round 2.
-- **The game ends the moment a sixth tower is capped.** No rebuttal turn.
+- **Finishing the block is loud.** The rival still gets one final turn, but now it is unmistakable: a red FINAL TURN banner, the event bar turns red for the whole turn, the round label reads FINAL TURN and the button reads *End game*.
 - **Turn ceremony.** "Rival's turn" banner with their portrait before the replay, slower move ticks, the drafted card shown large, then a "Your turn" banner as your hand deals in. Your hand stays hidden until then.
 - **Shuffle** is one stack lifting, flipping and landing on the draw pile, which then riffles; counts update on landing.
 - **Natures.** Keywords printed on cards instead of a popup: Exhaust, Prestige (+1★/tier etc. inline), Retain, Ground, Top, Target, HQ.

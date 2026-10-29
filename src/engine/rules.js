@@ -282,11 +282,14 @@ export function chooseBounty(g, pi, id) {
 // --- Round / turn flow ---
 export function startRound(g) {
   g.round += 1;
-  if (g.round > g.events.length) {
+  if (g.round > g.events.length && g.endTriggeredBy < 0) {
     endGame(g, 'clock');
     return;
   }
-  g.event = g.events[g.round - 1];
+  g.event =
+    g.round > g.events.length
+      ? { id: 'final', name: 'Final turn', text: 'The block is complete. One last turn, then scoring.', mods: {} }
+      : g.events[g.round - 1];
   g.mods = Object.assign({}, g.event.mods || {});
   g.players.forEach((p) => (p.charmedThisRound = false));
   if (g.event.apply) g.event.apply(g);
@@ -435,11 +438,11 @@ export function playCard(g, pi, uid, plotIdx) {
     if (hasHq(p, 'unionhall')) p.money += 2;
     g.actions.push({ pi, kind: 'cap', card: c, plot: plotIdx });
     record(g, 'cap', pi, { card: c.key, plot: plotIdx });
-    if (p.plots.every((pl) => pl.cap)) {
+    if (p.plots.every((pl) => pl.cap) && g.endTriggeredBy < 0) {
       g.endTriggeredBy = pi;
-      log(g, `${p.name} completes the block!`);
-      endGame(g, 'complete');
-      return true;
+      const o = g.players[1 - pi];
+      log(g, `${p.name} completes the block! ${o.name} gets one final turn.`);
+      record(g, 'blockComplete', pi, { finalTurnFor: o.idx });
     }
     log(g, `${p.name} caps plot ${plotIdx + 1} with ${c.name} (+${capBonus(p.plots[plotIdx], c, g) + cardPts(c)})`);
     return true;
@@ -649,6 +652,10 @@ export function finishTurn(g) {
   p.hand = [];
   p.noCap = false;
   record(g, 'endTurn', p.idx, {});
+  if (g.endTriggeredBy >= 0 && g.endTriggeredBy !== p.idx) {
+    endGame(g, 'complete');
+    return;
+  }
   if (g.turn === 0) {
     g.turn = 1;
     startTurn(g);
@@ -674,6 +681,10 @@ export function score(g, p) {
   if (g.endTriggeredBy === p.idx) s.finisher = g.settings.finisherBonus;
   s.total = s.towers + s.bounty + s.finisher;
   return s;
+}
+// The final (rebuttal) turn: the block is complete and the other player is taking their last turn.
+export function isFinalTurn(g) {
+  return !g.gameOver && g.endTriggeredBy >= 0 && g.turn !== g.endTriggeredBy;
 }
 export function endGame(g, reason) {
   g.gameOver = true;

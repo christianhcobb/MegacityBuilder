@@ -127,7 +127,7 @@ describe('engine', () => {
     playOut(again);
     expect(again.result.scores.map((s) => s.total)).toEqual(g.result.scores.map((s) => s.total));
   });
-  it('the game ends the moment a sixth tower is capped', () => {
+  it('a sixth cap gives the rival one final turn, then the game ends', () => {
     const g = game(21);
     const p = g.players[0];
     g.turn = 0;
@@ -147,7 +147,18 @@ describe('engine', () => {
     const cap = Object.assign({ uid: 901, key: 'flatroof', charms: [] }, MCD.CATALOG.flatroof);
     p.hand.push(cap);
     expect(MCD.playCard(g, 0, cap.uid, 5)).toBe(true);
+    expect(g.gameOver).toBe(false);
+    expect(g.endTriggeredBy).toBe(0);
+    const pass = (pi) => {
+      MCD.endTurn(g, pi);
+      while (g.pending.length) MCD.resolve(g, g.pending[0], g.market[0] ? g.market[0].uid : null);
+    };
+    pass(0);
+    expect(MCD.isFinalTurn(g)).toBe(true);
+    expect(g.turn).toBe(1);
+    pass(1);
     expect(g.gameOver).toBe(true);
+    expect(g.result.reason).toBe('complete');
     expect(g.result.reason).toBe('complete');
     expect(g.result.scores[0].finisher).toBe(6);
   });

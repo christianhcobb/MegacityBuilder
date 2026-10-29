@@ -15,7 +15,7 @@ Pillars: the draft is the core tension · a tower is a visible commitment · the
 3. **Draw** — 5 cards (6 at Renowned). Reshuffle when the draw pile is empty; on a reshuffle, retire one card from the draw pile (never below 8 cards total).
 4. **Act** — play cards. One floor per tower per turn (two with a crane). Any order, no limit on cards.
 5. **Draft** — take 1 of the 3 market cards (4 at Noticed); the rest stay for the rival. The permit office always sells a Flat Roof for $5.
-6. End of turn discards the hand. The game ends the moment a sixth tower is capped; then score.
+6. End of turn discards the hand. When a sixth tower is capped the rival gets one final turn (flagged loudly in the UI), then score.
 
 ## Cards
 

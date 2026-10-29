@@ -212,14 +212,21 @@ function render() {
   if (!g) return;
   const me = g.players[humanView],
     op = g.players[1 - humanView];
-  $('roundLbl').textContent = g.gameOver ? 'final' : `R${g.round}/${g.events.length} · ${M.cur(g).name}`;
+  const finalTurn = M.isFinalTurn(g);
+  $('roundLbl').textContent = g.gameOver ? 'final' : finalTurn ? `FINAL TURN · ${M.cur(g).name}` : `R${g.round}/${g.events.length} · ${M.cur(g).name}`;
+  $('roundLbl').classList.toggle('final', finalTurn);
+  const finalMsg = finalTurn
+    ? `${g.players[g.endTriggeredBy].name} finished the block. ${g.turn === humanView ? 'Last chance to score.' : 'Rival takes a last turn, then scoring.'}`
+    : '';
   if (g.event) {
     const eb = $('eventBar');
-    eb.innerHTML = `<b>${g.event.name}</b><span>${g.event.text}</span>`;
+    eb.innerHTML = finalTurn ? `<b>FINAL TURN</b><span>${finalMsg}</span>` : `<b>${g.event.name}</b><span>${g.event.text}</span>`;
+    eb.classList.toggle('final', finalTurn);
     const ep = $('evtPill');
     ep.hidden = false;
-    ep.innerHTML = `<b>${g.event.name}</b><span>${g.event.text}</span>`;
-    ep.title = g.event.text;
+    ep.innerHTML = finalTurn ? `<b>FINAL TURN</b><span>${finalMsg}</span>` : `<b>${g.event.name}</b><span>${g.event.text}</span>`;
+    ep.classList.toggle('final', finalTurn);
+    ep.title = finalTurn ? finalMsg : g.event.text;
     if (g.round !== lastRound) {
       eb.classList.remove('flash');
       void eb.offsetWidth;
@@ -332,9 +339,14 @@ function render() {
   }
   updatePiles(me);
   $('endBtn').disabled = !myTurn;
+  $('endBtn').textContent = finalTurn && myTurn ? 'End game' : 'End turn';
   $('subBtn').hidden = !(myTurn && sel && sel.kind === 'block');
   $('mktBtn').hidden = !(myTurn && !(sel && sel.kind === 'block'));
   if (!replaying) $('hint').textContent = hintText(me, myTurn, sel);
+  if (!g.gameOver && g.endTriggeredBy === humanView && g.turn === humanView && blockBanner !== g.endTriggeredBy) {
+    blockBanner = humanView;
+    turnBanner(me, 'Block complete!', 1800, 'Finish your turn — rival gets one last turn, then scoring');
+  }
   renderPending();
 }
 function renderHq(me, sel) {
@@ -834,11 +846,11 @@ function afterHumanAction() {
     else showPass();
   }
 }
-function turnBanner(p, text, ms) {
+function turnBanner(p, text, ms, sub) {
   const old = document.querySelector('.turnbanner');
   if (old) old.remove();
-  const b = h('div', 'turnbanner' + (p.idx === humanView ? ' mine' : ' theirs'));
-  b.innerHTML = `<span class="pf">${p.firm ? A.dev(p.firm.id) : ''}</span><span class="tb"><b>${text}</b><small>${p.firm ? p.firm.name : p.name}</small></span>`;
+  const b = h('div', 'turnbanner' + (p.idx === humanView ? ' mine' : ' theirs') + (sub ? ' final' : ''));
+  b.innerHTML = `<span class="pf">${p.firm ? A.dev(p.firm.id) : ''}</span><span class="tb"><b>${text}</b><small>${sub || (p.firm ? p.firm.name : p.name)}</small></span>`;
   document.body.appendChild(b);
   setTimeout(() => {
     b.classList.add('out');
@@ -846,12 +858,14 @@ function turnBanner(p, text, ms) {
   }, ms || 1100);
 }
 let bannerShown = -1;
+let blockBanner = -1;
 function runAi() {
   $('hint').textContent = 'Rival is building…';
   replaying = true;
   if (bannerShown !== g.round) {
     bannerShown = g.round;
-    turnBanner(g.players[1], "Rival's turn", 1100);
+    if (M.isFinalTurn(g)) turnBanner(g.players[1], "Rival's final turn", 1800, 'You finished the block — they get one last turn');
+    else turnBanner(g.players[1], "Rival's turn", 1100);
   }
   setTimeout(() => {
     const start = g.actions.length;
@@ -863,7 +877,10 @@ function runAi() {
       applyOppMode();
       if (!g.gameOver && g.turn === 1) runAi();
       else {
-        if (!g.gameOver) turnBanner(g.players[humanView], 'Your turn', 900);
+        if (!g.gameOver) {
+          if (M.isFinalTurn(g)) turnBanner(g.players[humanView], 'FINAL TURN', 2000, 'Rival finished the block — this is your last turn');
+          else turnBanner(g.players[humanView], 'Your turn', 900);
+        }
         render();
       }
     });
@@ -1193,6 +1210,7 @@ function showSetup() {
     showDeckPicker(f, (pack) => {
       g = M.newGame({ opponent: settings.opponent, freeBuilds: settings.freeBuilds, finisherBonus: settings.finisherBonus, version: __APP_VERSION__ });
       bannerShown = -1;
+      blockBanner = -1;
       M.chooseFirm(g, 0, firm, pack);
       const others = M.FIRMS.filter((x) => x.id !== firm);
       if (settings.opponent === 'hotseat') {
