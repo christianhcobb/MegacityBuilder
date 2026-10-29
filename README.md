@@ -2,7 +2,7 @@
 
 A two-player mobile deck-builder about rival skyscraper developers. Each player brings ten cards into a shared pool, drafts from it every turn, and races to finish six towers on a city block — or out-builds the racer with taller, better-planned ones.
 
-**Play the current build:** the `main` branch deploys to GitHub Pages (see the repo's Pages URL). On a phone, open it in Safari, Share → *Add to Home Screen* for a full-screen app.
+**Play the current build:** `main` deploys to https://christianhcobb.github.io/megacitybuilder/. On a phone, open it in Safari, Share → *Add to Home Screen* for a full-screen app.
 
 ## Running it
 
