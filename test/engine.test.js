@@ -169,4 +169,64 @@ describe('engine', () => {
     const keys = new Set(Object.keys(MCD.CATALOG));
     [...MCD.BASE_DECK, ...MCD.STARTER, ...MCD.FIRMS.flatMap((f) => [...f.pack, ...f.collection])].forEach(([k]) => expect(keys.has(k), k).toBe(true));
   });
+
+  it('banked money scores 1★ per $10 (Treasury: per $6)', () => {
+    const g = game(31);
+    const p = g.players[0];
+    p.money = 25;
+    expect(MCD.bankStars(p)).toBe(2);
+    p.hq.push(Object.assign({ uid: 950, key: 'treasury', charms: [] }, MCD.CATALOG.treasury));
+    expect(MCD.bankStars(p)).toBe(4);
+  });
+  it('a developer starts with their signature HQ installed and one open slot', () => {
+    const g = game(32);
+    const p = g.players[0];
+    expect(p.hq.length).toBe(1);
+    expect(p.hq[0].signature).toBe(true);
+    expect(MCD.hqSlots(p)).toBe(2);
+  });
+  it('specialists only join the cards they are for', () => {
+    const block = { kind: 'block', type: 'S' };
+    expect(MCD.charmFits('anchor', block)).toBe(true);
+    expect(MCD.charmFits('concierge', block)).not.toBe(true);
+    expect(MCD.charmFits('gilded', { kind: 'cap' })).toBe(true);
+    expect(MCD.charmFits('gilded', block)).not.toBe(true);
+    expect(MCD.charmFits('expedite', { kind: 'ops' })).toBe(true);
+  });
+  it('a finished block stops drafting', () => {
+    const g = game(33);
+    const p = g.players[0];
+    g.turn = 0;
+    g.phase = 'act';
+    g.pending = [];
+    p.plots.forEach((pl) => {
+      pl.blocks.push({ key: 'studio', type: 'R', look: 'brick', rev: 1, pts: 1, charms: [] });
+      pl.cap = Object.assign({ uid: 960, key: 'flatroof', charms: [] }, MCD.CATALOG.flatroof);
+    });
+    const before = MCD.deckTotal(p);
+    expect(MCD.endTurn(g, 0)).toBe(true);
+    expect(g.pending.some((r) => r.type === 'draft')).toBe(false);
+    expect(g.turn).toBe(1);
+    expect(MCD.deckTotal(p)).toBe(before);
+  });
+  it('ground-only floors need an empty plot; Mirror Hall copies the floor below', () => {
+    const g = game(34);
+    const p = g.players[0];
+    g.turn = 0;
+    g.phase = 'act';
+    g.pending = [];
+    p.money = 50;
+    p.plots.forEach((pl) => (pl.zone = 'open'));
+    const lobby = Object.assign({ uid: 970, key: 'lobby', charms: [] }, MCD.CATALOG.lobby);
+    const mirror = Object.assign({ uid: 971, key: 'mirror', charms: [] }, MCD.CATALOG.mirror);
+    p.hand.push(lobby, mirror);
+    expect(MCD.playCard(g, 0, lobby.uid, 0)).toBe(true);
+    const lobby2 = Object.assign({ uid: 972, key: 'lobby', charms: [] }, MCD.CATALOG.lobby);
+    p.hand.push(lobby2);
+    expect(MCD.canPlay(g, 0, lobby2.uid, 0)).not.toBe(true);
+    p.plots[0].builtThisTurn = 0;
+    expect(MCD.playCard(g, 0, mirror.uid, 0)).toBe(true);
+    // lobby: 1★ +1 per floor above (mirror) = 2; mirror copies 2 → tower 4★
+    expect(MCD.plotPts(p, 0)).toBe(4);
+  });
 });

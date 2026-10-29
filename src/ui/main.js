@@ -17,7 +17,8 @@ try {
 let humanView = 0,
   passPending = false,
   overlayKey = null;
-let lastHandSig = '',
+let handWasAway = true,
+  lastHandView = -1,
   lastCounts = null,
   lastMoney = null,
   lastRound = 0,
@@ -114,6 +115,9 @@ function startSetup() {
 }
 
 // ---------- rendering ----------
+function tierNow() {
+  return g ? g.players[humanView].tier : 0;
+}
 function cardEl(c, opts) {
   opts = opts || {};
   const e = h('button', 'card ' + (c.kind === 'block' ? c.type : c.kind) + (c.look ? ' ' + c.look : '') + (c.firm ? ' firm' : ''));
@@ -146,6 +150,10 @@ function cardEl(c, opts) {
       kw.appendChild(s);
     });
     body.appendChild(kw);
+  }
+  if (c.ps || (c.charms && c.charms.includes('tenured'))) {
+    e.classList.add('ps');
+    if (tierNow() > 0) e.classList.add('shimmer', 'shim' + Math.min(4, tierNow()));
   }
   if (c.text) body.appendChild(h('div', 'tx', c.text));
   else if (c.kind === 'block') {
@@ -202,7 +210,7 @@ function statsHtml(p, mine) {
   const t = p.tier,
     next = M.TIERS[t + 1];
   const prog = next ? Math.min(1, (p.prestige - M.TIERS[t].at) / (next.at - M.TIERS[t].at)) : 1;
-  s += `<span class="rep" data-pi="${p.idx}" title="Reputation">${A.tierBadge(t)}<span>${p.prestige}★</span><span class="bar"><i style="width:${Math.round(prog * 100)}%"></i></span></span>`;
+  s += `<span class="rep${t >= 2 ? ' glow' : ''}" data-pi="${p.idx}" title="Reputation">${A.tierBadge(t)}<span>${p.prestige}★</span><span class="bar"><i style="width:${Math.round(prog * 100)}%"></i></span></span>`;
   s += `<span class="rentline" title="Only finished towers collect rent">rent $${gross}${pot > gross ? ` <i>(+$${pot - gross} when finished)</i>` : ''}</span><span class="finline">finished <b class="k">${capped}/6</b></span>`;
   if (mine) s += `<span class="deckbtn" data-pi="${p.idx}">deck ${p.deck.length} · discard ${p.discard.length} · cut ${p.removed.length}</span>`;
   if (mine && p.bounty) s += `<span class="bounty">★ <b>${p.bounty.name}</b>: ${p.bounty.text} (+${p.bounty.pts})</span>`;
@@ -304,13 +312,15 @@ function render() {
   lastCounts = counts;
   lastCounts.view = humanView;
   const hd = $('hand');
+  // remember where each card was, so survivors slide into the gap instead of re-dealing
+  const prevRects = {};
+  if (!handWasAway && lastHandView === humanView) hd.querySelectorAll('.card').forEach((e) => (prevRects[e.dataset.uid] = e.getBoundingClientRect()));
   hd.innerHTML = '';
   const myTurn = g.turn === humanView && g.phase === 'act' && !g.pending.length && !g.gameOver;
   hd.classList.toggle('away', settings.opponent === 'ai' && (g.turn !== humanView || replaying) && !g.gameOver);
-  const sig = humanView + ':' + me.hand.map((c) => c.uid).join(',');
-  const fresh = sig !== lastHandSig && me.hand.length && !hd.classList.contains('away');
-  if (!hd.classList.contains('away')) lastHandSig = sig;
+  const away = hd.classList.contains('away');
   hd.style.setProperty('--n', me.hand.length);
+  let dealt = 0;
   me.hand.forEach((c, i) => {
     const e = cardEl(c, { onclick: () => onCard(c) });
     e.style.setProperty('--i', i);
@@ -323,20 +333,30 @@ function render() {
           : M.canPlay(g, humanView, c.uid, null) === true;
       if (!playable) e.classList.add('dead');
     }
-    if (fresh) {
+    if (!away && !prevRects[c.uid]) {
       e.classList.add('deal');
-      e.style.animationDelay = i * 90 + 'ms';
+      e.style.animationDelay = dealt++ * 90 + 'ms';
     }
     hd.appendChild(e);
   });
-  if (fresh) {
+  if (!away) {
     const pr = $('pileDraw').getBoundingClientRect();
-    hd.querySelectorAll('.card.deal').forEach((e) => {
+    hd.querySelectorAll('.card').forEach((e) => {
       const r = e.getBoundingClientRect();
-      e.style.setProperty('--dx', pr.left + pr.width / 2 - (r.left + r.width / 2) + 'px');
-      e.style.setProperty('--dy', pr.top + pr.height / 2 - (r.top + r.height / 2) + 'px');
+      const was = prevRects[e.dataset.uid];
+      if (was) {
+        const dx = was.left - r.left,
+          dy = was.top - r.top;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1)
+          e.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0px 0px' }], { duration: 340, easing: 'cubic-bezier(.2,.9,.3,1)' });
+      } else {
+        e.style.setProperty('--dx', pr.left + pr.width / 2 - (r.left + r.width / 2) + 'px');
+        e.style.setProperty('--dy', pr.top + pr.height / 2 - (r.top + r.height / 2) + 'px');
+      }
     });
   }
+  handWasAway = away;
+  lastHandView = humanView;
   updatePiles(me);
   $('endBtn').disabled = !myTurn;
   $('endBtn').textContent = finalTurn && myTurn ? 'End game' : 'End turn';
@@ -353,15 +373,16 @@ function renderHq(me, sel) {
   const strip = $('hqStrip');
   strip.innerHTML = '<span class="hqlbl">HQ</span>';
   const slots = M.hqSlots(me);
-  for (let i = 0; i < 3; i++) {
+  let lockedShown = false;
+  for (let i = 0; i < 4; i++) {
     const c = me.hq[i];
     if (c) {
-      const s = h('div', 'hqslot filled', `<span class="ha">${cardArt(c)}</span><span>${c.name}</span>`);
+      const s = h('div', 'hqslot filled' + (c.signature ? ' sig' : ''), `<span class="ha">${cardArt(c)}</span><span>${c.name}</span>`);
       s.title = c.text;
       s.addEventListener('click', () => toast(c.name + ': ' + c.text.replace('HQ: ', '')));
       strip.appendChild(s);
     } else if (i < slots) {
-      const s = h('div', 'hqslot', 'open slot');
+      const s = h('div', 'hqslot' + (sel && sel.kind === 'hq' ? ' want' : ''), sel && sel.kind === 'hq' ? 'tap to open here' : 'open slot');
       if (sel && sel.kind === 'hq') {
         s.addEventListener('click', (ev) => {
           ev.stopPropagation();
@@ -369,9 +390,12 @@ function renderHq(me, sel) {
         });
       }
       strip.appendChild(s);
-    } else {
-      const need = i === 1 ? 'Respected' : 'Iconic';
-      strip.appendChild(h('div', 'hqslot locked', `${A.lockSvg()}<span>${need}</span>`));
+    } else if (!lockedShown) {
+      lockedShown = true;
+      const need = i === 2 ? 'Respected' : 'Iconic';
+      const s = h('div', 'hqslot locked', `${A.lockSvg()}<span>${need}</span>`);
+      s.title = `Another HQ slot opens at ${need}`;
+      strip.appendChild(s);
     }
   }
   strip.classList.toggle('target', !!(sel && sel.kind === 'hq' && me.hq.length < slots));
@@ -514,6 +538,37 @@ function flyCard(uid, targetEl) {
     { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)' }
   ).onfinish = () => f.remove();
 }
+// Particle burst from an element: coins for money, stars for prestige, dice for luck.
+function burst(el, kind, n) {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width / 2,
+    cy = r.top + r.height / 2;
+  for (let i = 0; i < n; i++) {
+    const p = h('div', 'pt ' + kind, kind === 'coin' ? '$' : kind === 'star' ? '★' : '');
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    const ang = Math.random() * Math.PI * 2,
+      d = 30 + Math.random() * 50;
+    p.style.setProperty('--x', Math.cos(ang) * d + 'px');
+    p.style.setProperty('--y', Math.sin(ang) * d - 40 + 'px');
+    p.style.animationDelay = Math.random() * 120 + 'ms';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+}
+function rollFx(el, f) {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const d = h('div', 'dice' + (f.gain ? ' win' : ' lose'));
+  const face = f.roll === 'heads' ? 'H' : f.roll === 'tails' ? 'T' : f.roll;
+  d.innerHTML = `<span class="cube">${face}</span><b>${f.gain ? '+$' + f.gain : 'nothing'}</b>`;
+  d.style.left = r.left + r.width / 2 + 'px';
+  d.style.top = r.top + 'px';
+  document.body.appendChild(d);
+  if (f.gain) setTimeout(() => burst(el, 'coin', 6 + f.gain), 500);
+  setTimeout(() => d.remove(), 1700);
+}
 function doPlay(uid, plot) {
   const target = plot != null ? $('myLots').children[plot] : $('hqStrip');
   const me = g.players[humanView];
@@ -539,11 +594,30 @@ function doPlay(uid, plot) {
       } catch {}
     }
   }
-  // the crew returns: a card back hops from the tower to the discard pile (unless the card left the deck)
-  const stays =
-    card &&
-    (card.kind === 'cap' || card.kind === 'hq' || card.key === 'siteoffice' || card.key === 'crane' || (card.charms && card.charms.includes('expedite')));
-  if (a && !stays) setTimeout(() => flyRect(target.getBoundingClientRect(), $('pileDiscard'), { ms: 380, end: 1, fade: false }), 380);
+  // the crew returns: a card back hops from the tower to the discard pile (or the draw pile with an Expediter),
+  // unless the card left the deck for good
+  const gone = card && (card.kind === 'cap' || card.kind === 'hq' || M.ONE_SHOT.includes(card.key));
+  const retained = card && !gone && card.charms && card.charms.includes('expedite');
+  if (a && retained) {
+    setTimeout(() => flyRect(target.getBoundingClientRect(), $('pileDraw'), { ms: 420, end: 1, fade: false }), 380);
+    setTimeout(() => popLabel($('pileDraw'), 'Expediter: back on top', 1400), 800);
+  } else if (a && !gone) setTimeout(() => flyRect(target.getBoundingClientRect(), $('pileDiscard'), { ms: 380, end: 1, fade: false }), 380);
+  // special effects (look the plot up again at fire time: render() replaces the element)
+  const act = g.actions[g.actions.length - 1];
+  const plotEl = () => (plot != null ? $('myLots').children[plot] : $('hqStrip'));
+  if (card && act && act.card === card) {
+    if (card.kind === 'block' && plot != null) {
+      const rv = M.cardRev(card, me.tier),
+        pt = M.cardPts(card, me.tier);
+      setTimeout(() => {
+        if (rv) burst(plotEl(), 'coin', 4 + Math.min(6, rv * 2));
+        if (pt) burst(plotEl(), 'star', 3 + Math.min(6, pt * 2));
+      }, 360);
+      (act.fx || []).forEach((f, k) => setTimeout(() => rollFx(plotEl(), f), 700 + k * 500));
+    }
+    if (card.kind === 'cap' && plot != null) setTimeout(() => burst(plotEl(), 'star', 14), 360);
+    if (card.key === 'windfall' && act.roll != null) setTimeout(() => rollFx($('myStats'), { what: 'windfall', roll: act.roll, gain: act.roll }), 300);
+  }
   selected = null;
   render();
 }
@@ -637,7 +711,9 @@ function showTiers(p) {
   M.refreshTier(p);
   const sheet = h('div', 'sheet');
   sheet.appendChild(h('h2', null, `${p.name}: ${M.TIERS[p.tier].name}`));
-  sheet.appendChild(h('p', null, `${p.prestige}★ banked in finished towers. Reputation unlocks perks and powers up prestige-sensitive cards (the ◈ badge).`));
+  sheet.appendChild(
+    h('p', null, `${p.prestige}★ banked in finished towers. Reputation unlocks perks and powers up Prestige cards (they shimmer once you have a tier).`)
+  );
   const list = h('div', 'tiers');
   M.TIERS.forEach((tr, i) => {
     const row = h(
@@ -742,34 +818,63 @@ function renderPending() {
   } else if (req.type === 'charm') {
     sheet.classList.add('add');
     sheet.appendChild(h('div', 'tag', 'Talent fair'));
-    sheet.appendChild(h('h2', null, 'Hire a specialist'));
-    sheet.appendChild(h('p', null, `$${req.price} to embed one in a card in your hand, for the rest of the match. You have $${p.money}. Or skip.`));
+    sheet.appendChild(h('h2', null, 'Specialists for hire'));
+    sheet.appendChild(h('p', null, `Pick one, then the card they join for the rest of the match. You have $${p.money}.`));
     let charm = null;
-    const ch = h('div', 'shop');
+    const ch = h('div', 'shop charms');
     const opts = [];
+    const forName = (k) => {
+      const f = M.CHARMS[k].for;
+      return f === 'any' ? 'any card' : f === 'block' ? 'any floor' : f === 'cap' ? 'caps' : M.TYPE_NAME[f] + ' floors';
+    };
+    const cards = h('div', 'choices dimall');
+    const paint = () => {
+      cards.querySelectorAll('.card').forEach((e) => {
+        const c = p.hand.find((x) => x.uid === +e.dataset.uid);
+        const fit = charm ? M.charmFits(charm, c) : null;
+        e.classList.toggle('fit', fit === true);
+        e.classList.toggle('nofit', charm && fit !== true);
+        let lbl = e.querySelector('.fitlbl');
+        if (!lbl) {
+          lbl = h('div', 'fitlbl');
+          e.appendChild(lbl);
+        }
+        lbl.textContent = fit === true ? 'hire here' : charm ? fit : '';
+      });
+    };
     req.offer.forEach((k) => {
-      const o = h('button', 'option', `${A.charmBadge(k)}<b>${M.CHARMS[k].name}</b><br><small>${M.CHARMS[k].text}</small>`);
+      const price = req.prices ? req.prices[k] : req.price;
+      const o = h(
+        'button',
+        'option charmopt',
+        `${A.charmBadge(k)}<b>${M.CHARMS[k].name}<span class="for">${forName(k)}</span></b><small>${M.CHARMS[k].text}</small><span class="price">$${price}</span>`
+      );
+      if (p.money < price) o.classList.add('poor');
       o.addEventListener('click', () => {
-        if (p.money < req.price) {
+        if (p.money < price) {
           toast('Not enough money');
           return;
         }
         charm = k;
         opts.forEach((x) => x.classList.toggle('sel', x === o));
         cards.classList.remove('dimall');
+        paint();
       });
       opts.push(o);
       ch.appendChild(o);
     });
     sheet.appendChild(ch);
-    sheet.appendChild(h('p', null, 'Then the card they join:'));
-    const cards = h('div', 'choices dimall');
     p.hand.forEach((c) =>
       cards.appendChild(
         cardEl(c, {
           onclick: () => {
             if (!charm) {
               toast('Pick a specialist first');
+              return;
+            }
+            const fit = M.charmFits(charm, c);
+            if (fit !== true) {
+              toast(M.CHARMS[charm].name + ' ' + fit);
               return;
             }
             pick({ card: c.uid, charm });
@@ -828,7 +933,14 @@ function renderPending() {
       b.addEventListener('click', () => pick(null));
       sheet.appendChild(b);
     }
-    g.market.forEach((c) => ch.appendChild(cardEl(c, { onclick: () => pick(c.uid) })));
+    const empty = p.plots.filter((pl) => !pl.blocks.length && !pl.cap).length;
+    g.market.forEach((c) => {
+      const e = cardEl(c, { onclick: () => pick(c.uid) });
+      if (M.isGround(c)) {
+        e.appendChild(h('div', 'fitlbl' + (empty ? '' : ' warn'), empty ? `needs an empty plot · you have ${empty}` : 'no empty plot left'));
+      }
+      ch.appendChild(e);
+    });
     sheet.appendChild(ch);
     const buy = h('button', 'btn ghost', 'Or buy a Flat Roof for $5');
     buy.style.marginTop = '10px';
@@ -905,6 +1017,11 @@ function replay(acts, done) {
       return;
     }
     const a = acts[i++];
+    if (a.kind === 'rolls') {
+      a.rolls.forEach((f, k) => setTimeout(() => rollFx($('oppLots').children[f.plot] || $('oppStats'), f), k * 400));
+      setTimeout(step, 900);
+      return;
+    }
     const verb = { build: 'builds', cap: 'caps with', play: 'plays', sub: 'subcontracts', draft: 'drafts', charm: 'hires for', hq: 'opens' }[a.kind];
     const t = h(
       'div',
@@ -916,8 +1033,11 @@ function replay(acts, done) {
       const pl = $('oppLots').children[a.plot];
       if (pl) {
         pl.classList.add('hilite', 'bump');
+        if (a.kind === 'cap') burst(pl, 'star', 10);
+        (a.fx || []).forEach((f, k) => setTimeout(() => rollFx(pl, f), 300 + k * 400));
       }
     }
+    if (a.kind === 'play' && a.roll != null) rollFx($('oppStats'), { what: 'windfall', roll: a.roll, gain: a.roll });
     if (a.kind === 'draft') {
       const big = h('div', 'draftshow');
       big.appendChild(cardEl(a.card));
@@ -1033,12 +1153,13 @@ function showGameOver() {
     ['Finished towers', 'towers'],
     ['Bounty', 'bounty'],
     ['Finisher bonus', 'finisher'],
+    ['Banked money', 'bank'],
   ];
   let t = `<table class="score"><tr><td></td><td>${names[0]}</td><td>${names[1]}</td></tr>`;
   rows.forEach(([l, k]) => (t += `<tr><td>${l}</td><td>${r.scores[0][k]}</td><td>${r.scores[1][k]}</td></tr>`));
   t += `<tr class="tot"><td>Total</td><td>${r.scores[0].total}</td><td>${r.scores[1].total}</td></tr></table>`;
   sheet.insertAdjacentHTML('beforeend', t);
-  sheet.appendChild(h('p', null, 'Only capped towers score. Unfinished towers and leftover money count for nothing.'));
+  sheet.appendChild(h('p', null, `Only capped towers score. Banked money is worth 1★ per $${M.BANK_RATE} (Treasury: per $6).`));
   const tog = h('button', 'btn ghost', 'Tower breakdown');
   tog.style.fontSize = '13px';
   tog.style.padding = '8px 12px';
@@ -1175,7 +1296,7 @@ function showSetup() {
   passPending = false;
   selected = null;
   lastCounts = null;
-  lastHandSig = '';
+  handWasAway = true;
   lastMoney = null;
   lastRound = 0;
   lastTier = null;
@@ -1274,18 +1395,19 @@ $('setBtn').addEventListener('click', () => {
   sheet.appendChild(h('h2', null, 'How it works'));
   sheet.innerHTML += `<p>Each round: event → income → draw 5 → build → draft 1 of 3 → discard hand.<br><br>
   <b>Crews.</b> A block card builds one floor and returns to your discard. A card with nowhere to go can be subcontracted: pay $1, discard it, draw a card.<br>
-  <b>Caps</b> are one-shot and need ${g ? g.settings.capMin : 2}+ floors. They cost $2, plus $1 per 2 floors above the 2nd, minus $1 per Civic floor you own. No height limit (except H3 plots), but every floor above the 3rd costs $1 more. A tower takes 1 floor per turn; a Tower Crane lets it take 2.<br>
+  <b>Caps</b> are one-shot and need ${g ? g.settings.capMin : 3}+ floors. They cost $3, plus $1 per 2 floors above the 2nd, minus $1 per Civic floor you own and $1 per Stone floor in the tower. No height limit (except H3 plots), but every floor above the 3rd costs $1 more. A tower takes 1 floor per turn; a Tower Crane lets it take 2.<br>
   <b>Money.</b> You earn $2 a turn plus rent. Only finished towers collect rent: cap a tower and its floors start paying.<br>
   <b>Streamline.</b> Every reshuffle you retire one card from the draw pile, but never below ${M.DECK_FLOOR} cards in total.<br>
   <b>Market.</b> Tap Market during your turn to see what you can draft at the end of it. The permit office always sells a Flat Roof for $5.<br>
-  <b>Reputation.</b> Points banked in finished towers set your tier (tap the badge). Tiers unlock perks and power up prestige-sensitive cards (◈).<br>
-  <b>HQ.</b> HQ cards leave your deck and sit above your block with a permanent effect. One slot to start; Respected and Iconic unlock two more.<br>
+  <b>Reputation.</b> Points banked in finished towers set your tier (tap the badge). Tiers unlock perks and power up Prestige cards, which shimmer once you have a tier.<br>
+  <b>HQ.</b> Your developer's specialty sits in the first HQ slot from the start. HQ cards leave your deck and join it with a permanent effect: one open slot to start, Respected and Iconic unlock two more.<br>
+  <b>Specialists.</b> At a Talent Fair, hire one into a card in your hand for the match. Some join any floor, some only one type, some only caps. Prices vary.<br>
   <b>Materials.</b> Floors are Glass, Brick or Stone (the badge on the card and the frame colour). Glass builds tall: no height surcharge. Brick is sturdy: ignores Tremor and Heat Wave. Stone carries weight: each Stone floor makes the cap $1 cheaper. A finished tower built all in one material scores +1★ per floor.<br>
   <b>Placement.</b> Retail: ground floor only. Hotel: always the top floor. Retail +$1 per neighbouring Residential tower, Office +$1 next to Office, Hotel +2★ next to Retail, Residential +1★ next to Civic.<br>
   <b>Zones</b> show as an icon on the plot (tap a plot to read it; same map for both): house = Residential zone, ground floor must be Residential · shop = Commercial zone, ground floor must be Office or Retail · 3 under a bar = height limit 3 · star = Landmark site, needs 3+ floors to cap, cap +3 · train = Transit hub, floors cost $1 less · no icon = open lot.<br>
   <b>Stacking.</b> Floors like certain neighbours below them: Office above Retail (+$1 to the shop), Residential above Retail or Civic (+1★), Hotel above Office (+2★).<br>
-  <b>Natures.</b> Keywords on cards: Exhaust (one use), Prestige (scales with your tier), Retain, Ground, Top, Target, HQ.<br>
-  <b>End.</b> The game ends the moment a sixth tower is capped. Score = finished towers (floors + neighbour bonuses + cap) + bounty + finisher bonus. Unfinished towers and leftover money score nothing.</p>`;
+  <b>Natures.</b> Keywords on cards: Exhaust (one use), Prestige (scales with your tier), Retain, Ground (needs an empty plot), Top, Target, Lucky (rolls dice), HQ.<br>
+  <b>End.</b> When a sixth tower is capped the rival gets one final turn, then scoring. Once your block is complete you stop drafting. Score = finished towers (floors + neighbour bonuses + cap) + bounty + finisher bonus + 1★ per $${M.BANK_RATE} banked. Unfinished towers score nothing.</p>`;
   const b = h('button', 'btn ghost', 'New game');
   b.addEventListener('click', () => {
     $('overlay').innerHTML = '';

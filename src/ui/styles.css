@@ -352,6 +352,18 @@ svg{display:block}
   .hqstrip{min-height:24px} .hqslot{height:22px}
   .toast{bottom:160px}
 }
+@media (orientation:landscape) and (max-height:430px){
+  .app{row-gap:2px;padding-block:2px} .topbar{min-height:0} .topbar h1{font-size:14px} .icon{width:24px;height:24px}
+  .side{padding:3px 6px;min-height:0;overflow:hidden} .boards{min-height:0}
+  .side.mine .lots{min-height:0;height:62px} .side.mine .plot.big{height:62px;min-height:0;padding-top:4px} .side.opp .plot{height:50px}
+  .side .stats{font-size:10px;gap:4px} .stats .money{font-size:16px;padding:2px 8px} .pf{width:22px;height:22px}
+  .hqstrip{min-height:20px} .hqslot{height:18px;font-size:9px}
+  .handrow{height:112px;grid-template-columns:52px 1fr 52px} .pile{width:42px;height:58px}
+  .hand{padding:8px 8px 0} .hand .card{flex:0 0 88px;height:106px;margin-left:-20px} .hand .card .tx{display:none} .hand .card .art{height:38px}
+  .hand .card:hover,.hand .card:focus-visible{transform:translateY(-10px) scale(1.05)} .hand .card.sel{transform:translateY(-18px) scale(1.08) rotate(-2deg)}
+  .actions .btn{padding:7px 6px;font-size:12px}
+  .toast{bottom:120px}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* natures */
@@ -388,3 +400,32 @@ svg{display:block}
 .tile.live .ti{font:700 24px var(--display);line-height:28px}
 .logrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:2px dashed var(--panel2);font-size:12px}
 .logrow small{color:var(--muted)}
+
+/* v1.2: particles, dice, shimmer, charm shop, hq */
+.pt{position:fixed;z-index:70;pointer-events:none;font-family:Fredoka,sans-serif;font-weight:800;font-size:15px;line-height:1;transform:translate(-50%,-50%);animation:ptfly .8s cubic-bezier(.2,.8,.4,1) forwards}
+.pt.coin{color:#b7791f;background:#ffd166;border:2px solid #23263a;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.pt.star{color:#a35ee8;text-shadow:0 0 0 #23263a,1px 1px 0 #23263a;font-size:18px}
+@keyframes ptfly{0%{opacity:0;translate:0 0;scale:.4}15%{opacity:1;scale:1.1}100%{opacity:0;translate:var(--x) var(--y);scale:.7}}
+.dice{position:fixed;z-index:72;pointer-events:none;transform:translate(-50%,-110%);display:flex;align-items:center;gap:8px;background:#fff;border:2.5px solid #23263a;border-radius:14px;padding:6px 10px;box-shadow:0 5px 0 rgba(0,0,0,.25);animation:dicein 1.7s ease-out forwards;font-family:Fredoka,sans-serif}
+.dice .cube{width:30px;height:30px;border-radius:7px;background:#fff;border:2.5px solid #23263a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;animation:cubespin .55s cubic-bezier(.3,1.4,.5,1)}
+.dice b{font-size:16px} .dice.win b{color:#2f8f45} .dice.lose b{color:#8d94ab}
+@keyframes cubespin{0%{transform:rotate(-200deg) scale(.3)}100%{transform:none}}
+@keyframes dicein{0%{opacity:0;translate:0 10px}10%{opacity:1;translate:0 0}80%{opacity:1}100%{opacity:0;translate:0 -14px}}
+.card.shimmer{position:relative;overflow:hidden}
+.card.shimmer::after{content:'';position:absolute;inset:-40% -60%;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.0) 45%,rgba(255,235,160,.55) 50%,rgba(255,255,255,.0) 55%,transparent 58%);animation:shim 3.2s linear infinite;mix-blend-mode:screen}
+.card.shim2::after{animation-duration:2.4s} .card.shim3::after{animation-duration:1.8s;background:linear-gradient(115deg,transparent 40%,rgba(255,235,160,.7) 50%,transparent 60%)} .card.shim4::after{animation-duration:1.3s;background:linear-gradient(115deg,transparent 38%,rgba(255,220,120,.85) 50%,transparent 62%)}
+.card.shim3,.card.shim4{box-shadow:0 0 0 2px rgba(255,194,51,.6),0 6px 0 rgba(0,0,0,.2)}
+@keyframes shim{0%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+.rep.glow{box-shadow:0 0 0 2px #ffc233,0 0 12px rgba(255,194,51,.7);animation:repglow 2s ease-in-out infinite}
+@keyframes repglow{50%{box-shadow:0 0 0 2px #ffc233,0 0 4px rgba(255,194,51,.4)}}
+.shop.charms{grid-template-columns:1fr;gap:6px}
+.shop .charmopt{display:grid;grid-template-columns:30px 1fr auto;grid-template-areas:"ic nm pr" "ic tx pr";gap:0 10px;align-items:center;text-align:left;padding:6px 10px}
+.shop .charmopt b{display:flex;gap:8px;align-items:baseline}
+.shop .charmopt svg{grid-area:ic;width:28px;height:28px;margin:0} .shop .charmopt b{grid-area:nm} 
+.shop .charmopt .for{font-size:10px;color:var(--blue);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.shop .charmopt small{grid-area:tx;font-size:11px;line-height:1.25} .shop .charmopt .price{grid-area:pr;background:#ffd166;border:2px solid #23263a;border-radius:999px;padding:2px 8px;font-weight:800}
+.shop .charmopt.poor{opacity:.5} .shop .charmopt.sel{outline:3px solid var(--blue)}
+.choices .card.nofit{opacity:.35;filter:grayscale(.6)} .choices .card.fit{outline:3px solid #4cc264;outline-offset:2px}
+.fitlbl{font-size:10px;font-weight:800;color:var(--muted);text-align:center;padding:2px 4px}
+.card.fit .fitlbl{color:#2f8f45} .fitlbl.warn{color:#d7263d}
+.hqslot.sig{border-style:solid;background:#fff6dc} .hqslot.want{border-color:#4cc264;background:#e9ffe9;animation:repglow 1.2s ease-in-out infinite}

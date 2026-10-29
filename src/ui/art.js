@@ -182,9 +182,236 @@ export const ART = (function () {
           rr(20, 20, 80, 8, C.C[1], 3) +
           `<g>${rect(53, 30, 14, 5, '#ff5e8a', 1)}${rect(57.5, 25.5, 5, 14, '#ff5e8a', 1)}<path d="M57.5 25.5h5v4.5h4.5v5h-4.5v4.5h-5v-4.5h-4.5v-5h4.5z" fill="none" stroke="${K}" stroke-width="${SW}" stroke-linejoin="round"/></g>`
       ),
+    cowork: () =>
+      scene(
+        shadow(60, 71, 36) +
+          rr(24, 28, 72, 42, C.O[0]) +
+          rect(24, 28, 72, 5, C.O[1]) +
+          windows(26, 36, 68, 18, 5, 1, C.glass, 2.5) +
+          rr(22, 56, 76, 6, C.O[2], 2) +
+          [34, 50, 66].map((x) => circ(x + 4, 66, 4, C.skin[(x / 16) % 4 | 0]) + rr(x, 69, 8, 3, C.O[2], 1)).join('') +
+          rr(76, 60, 16, 10, C.white, 2) +
+          `<text x="84" y="68" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="7" fill="${K}">wifi</text>`
+      ),
+    community: () =>
+      scene(
+        shadow(60, 71, 38) +
+          rr(22, 36, 76, 34, C.R[0]) +
+          rect(22, 36, 76, 4, C.R[1]) +
+          poly('18,38 60,18 102,38', C.C[1]) +
+          rr(50, 50, 20, 20, C.C[2], 3) +
+          rr(28, 46, 14, 12, C.glass, 2) +
+          rr(78, 46, 14, 12, C.glass, 2) +
+          circ(36, 30, 5, C.gold) +
+          `<path d="M31 30 h10 M36 25 v10" stroke="${K}" stroke-width="2"/>` +
+          [0, 1, 2].map((i) => circ(80 + i * 8, 30, 3.5, C.skin[i + 1])).join('')
+      ),
+    bazaar: () =>
+      scene(
+        shadow(60, 71, 40) +
+          rr(18, 40, 84, 30, C.S[0]) +
+          rect(18, 40, 84, 4, C.S[1]) +
+          `<path d="M14 40 q23 -22 46 0 q23 -22 46 0" fill="${C.S[1]}" stroke="${K}" stroke-width="${SW}"/>` +
+          circ(37, 22, 4, C.gold) +
+          circ(83, 22, 4, C.gold) +
+          [0, 1, 2, 3].map((i) => rr(24 + i * 19, 48, 14, 10, i % 2 ? '#ff6b6b' : C.glass, 2)).join('') +
+          rr(50, 58, 20, 12, C.S[2], 2) +
+          `<path d="M20 64 h80" stroke="${K}" stroke-width="1.5" opacity=".3"/>`
+      ),
+    convention: () =>
+      scene(
+        shadow(60, 71, 38) +
+          rr(28, 12, 64, 58, C.H[0]) +
+          rect(28, 12, 64, 5, C.H[1]) +
+          windows(30, 18, 60, 24, 5, 2, '#fff1c1', 2.5) +
+          rr(20, 44, 80, 8, C.H[2], 2) +
+          rr(24, 52, 72, 18, C.glass, 3) +
+          rr(44, 56, 32, 14, C.H[2], 2) +
+          `<text x="60" y="66" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="7" fill="${C.gold}">EXPO</text>` +
+          `<path d="M36 8 l4 -6 M84 8 l-4 -6" stroke="${K}" stroke-width="2"/>` +
+          rr(34, 4, 10, 6, '#ff6b6b', 1) +
+          rr(76, 4, 10, 6, C.C[1], 1)
+      ),
+    mirror: () =>
+      scene(
+        shadow(60, 71, 34) +
+          rr(30, 14, 60, 56, C.glass) +
+          rect(30, 14, 60, 5, C.O[0]) +
+          `<path d="M32 40 h56" stroke="${K}" stroke-width="2" stroke-dasharray="4 3"/>` +
+          windows(32, 20, 56, 18, 4, 1, C.O[0], 2.5) +
+          `<g opacity=".55">${windows(32, 44, 56, 18, 4, 1, C.O[0], 2.5)}</g>` +
+          `<path d="M36 18 l8 -8 M44 18 l8 -8" stroke="#fff" stroke-width="3" stroke-linecap="round"/>` +
+          `<path d="M36 66 l8 8 M44 66 l8 8" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".6"/>`
+      ),
+    atrium: () =>
+      scene(
+        shadow(60, 71, 38) +
+          rr(24, 30, 72, 40, C.glass) +
+          `<path d="M24 30 L60 8 L96 30 Z" fill="${C.glass}" stroke="${K}" stroke-width="${SW}" stroke-linejoin="round"/>` +
+          `<path d="M60 8 V70 M24 30 L96 70 M96 30 L24 70" stroke="${K}" stroke-width="1.4" opacity=".4"/>` +
+          [40, 60, 80].map((x) => `<path d="M${x} 70 v-10" stroke="${C.C[2]}" stroke-width="3"/>` + circ(x, 56, 6, C.C[1])).join('') +
+          shine(28, 34, 8, 30)
+      ),
+    datacenter: () =>
+      scene(
+        shadow(60, 71, 38) +
+          rr(22, 30, 76, 40, C.R[2]) +
+          rect(22, 30, 76, 5, C.R[1]) +
+          [0, 1, 2, 3]
+            .map(
+              (i) =>
+                rr(28 + i * 17, 38, 12, 28, C.cap[1], 2) +
+                [0, 1, 2, 3].map((j) => circ(34 + i * 17, 43 + j * 6, 1.6, j % 2 ? '#58ff8a' : C.gold, false)).join('')
+            )
+            .join('') +
+          rr(18, 20, 20, 10, C.grey[1], 2) +
+          `<path d="M20 24 h16 M20 27 h16" stroke="${K}" stroke-width="1.2" opacity=".5"/>` +
+          `<path d="M96 24 q8 -8 0 -16" fill="none" stroke="${K}" stroke-width="2"/><path d="M92 20 q4 -4 0 -8" fill="none" stroke="${K}" stroke-width="2"/>`
+      ),
+    casino: () =>
+      scene(
+        shadow(60, 71, 40) +
+          rr(20, 34, 80, 36, C.H[2]) +
+          rect(20, 34, 80, 4, C.H[1]) +
+          rr(26, 20, 68, 16, C.gold, 4) +
+          `<text x="60" y="32" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="10" fill="${K}">CASINO</text>` +
+          [0, 1, 2, 3, 4, 5, 6].map((i) => circ(28 + i * 10.6, 18, 2, i % 2 ? '#ff6b6b' : C.white, false)).join('') +
+          rr(32, 46, 22, 20, C.white, 4) +
+          [
+            [37, 51],
+            [48, 51],
+            [37, 61],
+            [48, 61],
+            [42.5, 56],
+          ]
+            .map(([x, y]) => circ(x, y, 2, K, false))
+            .join('') +
+          rr(64, 46, 22, 20, '#ff6b6b', 4) +
+          circ(75, 56, 2.5, C.white, false) +
+          rr(50, 60, 20, 10, C.H[1], 2)
+      ),
+    nightmarket: () =>
+      scene(
+        shadow(60, 71, 40) +
+          rr(20, 44, 80, 26, C.R[1]) +
+          `<path d="M16 44 h88 l-6 -14 h-76 z" fill="${'#ff6b6b'}" stroke="${K}" stroke-width="${SW}" stroke-linejoin="round"/>` +
+          [0, 1, 2, 3, 4].map((i) => circ(26 + i * 17, 22, 4, i % 2 ? C.gold : '#ff9f43')).join('') +
+          `<path d="M18 22 h84" stroke="${K}" stroke-width="1.5"/>` +
+          [28, 50, 72].map((x) => rr(x, 50, 16, 10, C.glass, 2)).join('') +
+          circ(60, 64, 3, C.gold, false) +
+          circ(40, 65, 2, C.gold, false) +
+          circ(80, 65, 2, C.gold, false),
+        ['#2b2f55', '#4a3c7a']
+      ),
+    arcology: () =>
+      scene(
+        shadow(60, 71, 32) +
+          rr(34, 8, 52, 62, C.R[0], 14) +
+          rect(40, 10, 40, 5, C.R[1], 3) +
+          `<path d="M34 40 h52" stroke="${K}" stroke-width="${SW}"/>` +
+          windows(38, 18, 44, 18, 3, 1, C.glass, 3) +
+          windows(38, 44, 44, 18, 3, 1, C.glass, 3) +
+          [46, 60, 74].map((x) => circ(x, 40, 4, C.C[1])).join('') +
+          `<text x="60" y="11" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="7" fill="${C.white}">×2</text>`
+      ),
+    loft: () =>
+      scene(
+        shadow(60, 71, 36) +
+          rr(24, 26, 72, 44, C.R[2]) +
+          rect(24, 26, 72, 5, C.R[1]) +
+          windows(26, 34, 68, 30, 3, 1, C.glass, 4) +
+          rr(30, 40, 16, 20, '#ffd6e0', 2) +
+          `<path d="M33 56 l5 -12 l5 12 M35 50 h6" stroke="#ff5e8a" stroke-width="2" fill="none"/>` +
+          rr(74, 40, 16, 20, '#d6f5ff', 2) +
+          circ(82, 50, 5, C.gold) +
+          `<path d="M20 22 l8 4 M100 22 l-8 4" stroke="${K}" stroke-width="2"/>` +
+          rr(44, 14, 32, 12, C.white, 3) +
+          `<text x="60" y="23" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="7" fill="${K}">LOFTS</text>`
+      ),
+    parking: () =>
+      scene(
+        shadow(60, 71, 40) +
+          rr(18, 36, 84, 34, C.grey[1]) +
+          rect(18, 36, 84, 4, C.grey[2]) +
+          `<path d="M18 52 h84" stroke="${K}" stroke-width="${SW}"/>` +
+          [26, 50, 74]
+            .map((x) => rr(x, 42, 20, 7, x === 50 ? '#ff6b6b' : C.O[0], 3) + circ(x + 4, 50, 2.5, K, false) + circ(x + 16, 50, 2.5, K, false))
+            .join('') +
+          [26, 74].map((x) => rr(x, 58, 20, 7, x === 26 ? C.C[1] : C.gold, 3) + circ(x + 4, 66, 2.5, K, false) + circ(x + 16, 66, 2.5, K, false)).join('') +
+          rr(50, 56, 20, 14, C.white, 2) +
+          `<text x="60" y="67" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="11" fill="${C.O[2]}">P</text>`
+      ),
+    lobby: () =>
+      scene(
+        shadow(60, 71, 40) +
+          rr(18, 30, 84, 40, C.grey[0]) +
+          rect(18, 30, 84, 5, C.grey[1]) +
+          [28, 48, 68, 88].map((x) => rr(x - 3, 38, 6, 32, C.white, 2)).join('') +
+          rr(44, 46, 32, 24, C.gold, 3) +
+          `<path d="M60 46 v24" stroke="${K}" stroke-width="2"/>` +
+          `<path d="M14 30 h92" stroke="${K}" stroke-width="${SW}"/>` +
+          poly('30,30 60,14 90,30', C.grey[1]) +
+          `<path d="M50 66 q10 -8 20 0" fill="none" stroke="${C.R[1]}" stroke-width="3"/>` +
+          circ(60, 36, 3, C.gold)
+      ),
+    streetmarket: () =>
+      scene(
+        shadow(60, 71, 40) +
+          [20, 50, 80]
+            .map(
+              (x, i) =>
+                rr(x, 48, 24, 22, [C.S[0], C.C[0], '#ff9f9f'][i], 3) +
+                `<path d="M${x - 3} 48 h30 l-4 -10 h-22 z" fill="${[C.S[1], C.C[1], '#ff6b6b'][i]}" stroke="${K}" stroke-width="${SW}" stroke-linejoin="round"/>` +
+                rr(x + 4, 54, 16, 8, C.white, 2)
+            )
+            .join('') +
+          circ(32, 58, 2.5, '#ff6b6b', false) +
+          circ(38, 58, 2.5, C.gold, false) +
+          circ(62, 58, 2.5, C.C[2], false) +
+          circ(92, 58, 2.5, C.H[1], false)
+      ),
+    lucky: () =>
+      scene(
+        shadow(60, 71, 38) +
+          rr(22, 38, 76, 32, '#ff6b6b') +
+          rect(22, 38, 76, 4, '#d94c4c') +
+          `<path d="M18 38 h84 l-6 -10 h-72 z" fill="${C.gold}" stroke="${K}" stroke-width="${SW}" stroke-linejoin="round"/>` +
+          `<path d="M30 18 q30 -16 60 0 q-10 6 -30 4 q-20 2 -30 -4 z" fill="${C.C[1]}" stroke="${K}" stroke-width="${SW}" stroke-linejoin="round"/>` +
+          circ(42, 17, 2, K, false) +
+          circ(78, 17, 2, K, false) +
+          rr(44, 46, 32, 24, C.white, 3) +
+          [
+            [52, 54],
+            [68, 54],
+            [60, 58],
+            [52, 62],
+            [68, 62],
+          ]
+            .map(([x, y]) => circ(x, y, 2, K, false))
+            .join('') +
+          rr(28, 46, 12, 18, C.glass, 2) +
+          rr(80, 46, 12, 18, C.glass, 2)
+      ),
   };
   const base = () => shadow(60, 71, 36) + rr(30, 40, 60, 30, C.grey[0]) + windows(32, 46, 56, 18, 4, 1, C.glass, 3) + rect(30, 40, 60, 4, C.grey[1]);
+
   const caps = {
+    billboard: () =>
+      scene(
+        base() +
+          `<path d="M40 40 v-8 M80 40 v-8" stroke="${K}" stroke-width="3"/>` +
+          rr(26, 8, 68, 26, C.white, 3) +
+          rr(30, 12, 60, 18, C.gold, 2) +
+          `<text x="60" y="25" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="9" fill="${K}">BUY NOW</text>`
+      ),
+    solar: () =>
+      scene(
+        base() +
+          rr(26, 24, 68, 16, C.O[2], 2) +
+          `<path d="M26 32 h68 M43 24 v16 M60 24 v16 M77 24 v16" stroke="${C.glass}" stroke-width="1.5"/>` +
+          `<path d="M26 24 L34 14 H102 L94 24" fill="${C.O[1]}" stroke="${K}" stroke-width="${SW}" stroke-linejoin="round"/>` +
+          `<path d="M104 10 l3 -4 M110 16 l5 -1 M100 6 l0 -5" stroke="${C.gold}" stroke-width="2" stroke-linecap="round"/>`
+      ),
     flatroof: () => scene(base() + rr(26, 34, 68, 8, C.cap[0], 2) + rr(40, 24, 12, 10, C.grey[1], 2) + rr(68, 26, 10, 8, C.grey[1], 2)),
     garden: () =>
       scene(
@@ -271,6 +498,72 @@ export const ART = (function () {
   const icon = (inner, bg) =>
     `<svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="84" fill="${bg || '#eef2fb'}"/><circle cx="60" cy="44" r="30" fill="rgba(255,255,255,.6)"/>${inner}</svg>`;
   const ops = {
+    elevator: () =>
+      icon(
+        shadow(60, 70, 22) +
+          rr(42, 14, 36, 52, C.grey[1], 3) +
+          rr(46, 20, 13, 42, C.O[0], 1) +
+          rr(61, 20, 13, 42, C.O[0], 1) +
+          `<path d="M60 12 l-7 8 h14 z M60 6 l-7 8 h14 z" fill="${C.gold}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>` +
+          [26, 36, 46].map((y) => circ(88, y, 2.5, y === 26 ? '#58ff8a' : C.grey[2], false)).join(''),
+        '#eaf4ff'
+      ),
+    windfall: () =>
+      icon(
+        shadow(60, 70, 26) +
+          `<g transform="rotate(-12 60 44)">${rr(42, 26, 36, 36, C.white, 6)}${[
+            [51, 35],
+            [69, 35],
+            [60, 44],
+            [51, 53],
+            [69, 53],
+          ]
+            .map(([x, y]) => circ(x, y, 3.2, K, false))
+            .join('')}</g>` +
+          `<path d="M30 30 q-8 -10 0 -18 M24 44 q-10 0 -12 -8 M90 30 q8 -10 0 -18" fill="none" stroke="${C.gold}" stroke-width="2.5" stroke-linecap="round"/>` +
+          circ(96, 48, 6, C.gold) +
+          `<text x="96" y="52" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="8" fill="${K}">$</text>`,
+        '#fff4d6'
+      ),
+    hq_harlow: () =>
+      icon(
+        shadow(60, 70, 26) +
+          rr(34, 30, 52, 36, C.R[0]) +
+          poly('28,32 60,12 92,32', C.R[2]) +
+          windows(38, 38, 44, 12, 3, 1) +
+          rr(52, 50, 16, 16, C.R[2], 2) +
+          circ(60, 24, 4, C.gold),
+        '#ffe9e0'
+      ),
+    hq_kessler: () =>
+      icon(
+        shadow(60, 70, 26) +
+          rr(36, 14, 48, 52, C.O[1]) +
+          rect(36, 14, 48, 5, C.O[0]) +
+          windows(38, 20, 44, 36, 3, 3, C.glass, 2.5) +
+          rr(50, 56, 20, 10, C.O[2], 2),
+        '#e3f0ff'
+      ),
+    hq_okafor: () =>
+      icon(
+        shadow(60, 70, 26) +
+          poly('26,34 60,14 94,34', C.C[1]) +
+          rr(30, 34, 60, 32, C.grey[0]) +
+          [0, 1, 2, 3].map((i) => rr(36 + i * 13, 40, 7, 22, C.white, 2)).join('') +
+          circ(60, 26, 4, C.gold),
+        '#e6f8e8'
+      ),
+    treasury: () =>
+      icon(
+        shadow(60, 70, 26) +
+          rr(34, 32, 52, 32, C.cap[1], 4) +
+          rect(34, 32, 52, 5, C.cap[0]) +
+          circ(60, 48, 9, C.gold) +
+          `<text x="60" y="52" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="10" fill="${K}">$</text>` +
+          `<path d="M60 39 v-7 M60 57 v7" stroke="${K}" stroke-width="2"/>` +
+          [44, 76].map((x) => rr(x - 4, 18, 8, 14, C.gold, 2)).join(''),
+        '#fff4d6'
+      ),
     grant: () =>
       icon(
         shadow(60, 70, 24) +
@@ -584,6 +877,15 @@ export const ART = (function () {
     foreman: `<path d="M5 13 l5 -5 M9 7 l4 4 M12 5 l3 3" stroke="${K}" stroke-width="2.2" stroke-linecap="round"/>`,
     variance: `<text x="10" y="14" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="11" fill="${K}">§</text>`,
     expedite: `<path d="M11 4 l-5 7 h4 l-1 5 l5 -7 h-4z" fill="${K}"/>`,
+    anchor: `<path d="M10 5 v11 M6 13 q4 4 8 0 M7 8 h6" fill="none" stroke="${K}" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="4.5" r="1.6" fill="none" stroke="${K}" stroke-width="1.6"/>`,
+    concierge: `<path d="M5 13 h10 M7 13 v-4 a3 3 0 0 1 6 0 v4" fill="none" stroke="${K}" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="6" r="1.2" fill="${K}"/>`,
+    boardroom: `<rect x="4" y="8" width="12" height="7" rx="1.5" fill="none" stroke="${K}" stroke-width="2"/><path d="M7 8 V5 h6 v3" fill="none" stroke="${K}" stroke-width="2"/>`,
+    super: `<path d="M4 15 l6 -8 l6 8 z" fill="none" stroke="${K}" stroke-width="2" stroke-linejoin="round"/><path d="M10 4 v3" stroke="${K}" stroke-width="2"/>`,
+    grantwriter: `<path d="M6 4 h8 v12 h-8 z M8 8 h4 M8 11 h4" fill="none" stroke="${K}" stroke-width="1.8" stroke-linejoin="round"/>`,
+    prefab: `<rect x="4" y="9" width="5" height="5" fill="${K}"/><rect x="11" y="9" width="5" height="5" fill="${K}"/><rect x="7.5" y="4" width="5" height="4" fill="${K}"/>`,
+    gilded: `<text x="10" y="14" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="10" fill="${K}">★★</text>`,
+    tenured: `<path d="M10 3 l2 4 l4.5 .6 l-3.3 3.1 l.8 4.4 l-4 -2.1 l-4 2.1 l.8 -4.4 l-3.3 -3.1 l4.5 -.6 z" fill="${K}"/>`,
+    gambler: `<rect x="4.5" y="4.5" width="11" height="11" rx="2.5" fill="none" stroke="${K}" stroke-width="1.8"/><circle cx="7.5" cy="7.5" r="1.2" fill="${K}"/><circle cx="12.5" cy="12.5" r="1.2" fill="${K}"/><circle cx="10" cy="10" r="1.2" fill="${K}"/>`,
   };
   const ZONE_GLYPH = {
     resi: `<path d="M4 11 L11 4 L18 11 M6 10 v7 h10 v-7" fill="#fff" stroke="${K}" stroke-width="2" stroke-linejoin="round"/><rect x="9.5" y="12" width="3" height="5" fill="${K}"/>`,

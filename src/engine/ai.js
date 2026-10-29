@@ -15,6 +15,8 @@ import {
   placementPreview,
   grossRev,
   hqSlots,
+  charmFits,
+  isGround,
 } from './rules.js';
 
 // --- AI (greedy heuristic) ---
@@ -23,6 +25,14 @@ export function cardValue(c, p, g) {
   if (c.kind === 'block') {
     let v = cardRev(c) * Math.min(left, 6) * 0.5 + cardPts(c) - (c.cost || 0) * 0.3;
     if (c.type === 'C') v += 1.5;
+    if (c.text) v += 1; // special floors are usually worth more than their printed numbers
+    if (c.key === 'casino') v += 2;
+    if (p && isGround(c)) {
+      // ground-only floors need an empty plot; without one they are dead cards
+      const empty = p.plots.filter((pl) => !pl.blocks.length && !pl.cap).length;
+      if (!empty) v = Math.min(v, 0.2);
+      else if (empty === 1) v *= 0.7;
+    }
     return v;
   }
   if (c.kind === 'cap') {
@@ -51,6 +61,8 @@ export function cardValue(c, p, g) {
       poach: 2,
       demolish: 0.5,
       tunnel: 0.5,
+      elevator: 2,
+      windfall: 3,
     }[c.key] || 1
   );
 }
@@ -68,10 +80,11 @@ export function aiAct(g, pi) {
           if (!best || v > best.v) best = { c, v, plot: null };
         }
       } else if (c.target === 'plot') {
-        if (c.key !== 'crane') return; // AI does not use demolish/tunnel yet
+        if (c.key !== 'crane' && c.key !== 'elevator') return; // AI does not use demolish/tunnel yet
         p.plots.forEach((pl, i) => {
           if (canPlay(g, pi, c.uid, i) !== true) return;
-          const v = pl.blocks.length >= 1 && pl.blocks.length <= 2 ? 3.5 : 1;
+          let v = pl.blocks.length >= 1 && pl.blocks.length <= 2 ? 3.5 : 1;
+          if (c.key === 'elevator') v = p.hand.some((x) => x.kind === 'block' && x.uid !== c.uid) ? 2.5 : -1;
           if (!best || v > best.v) best = { c, v, plot: i };
         });
       } else if (c.kind === 'ops' || c.kind === 'int') {
@@ -136,14 +149,34 @@ export function aiResolvePending(g, pi) {
         pick = p.bountyOffer[Math.floor(g.rng() * 2)].id;
         break;
       case 'charm': {
-        const best = p.hand.slice().sort((a, b) => cardValue(b, p, g) - cardValue(a, p, g))[0];
-        if (!best || p.money < req.price + 3) {
-          pick = null;
-          break;
-        }
-        const pref =
-          best.kind === 'block' ? ['lease', 'foreman', 'architect', 'expedite', 'variance'] : ['expedite', 'architect', 'lease', 'foreman', 'variance'];
-        pick = { card: best.uid, charm: pref.find((k) => req.offer.includes(k)) };
+        // best (card, charm) pair the AI can afford: card value × charm weight
+        const w = {
+          lease: 3,
+          architect: 3,
+          foreman: 2,
+          variance: 1,
+          expedite: 2.5,
+          anchor: 3,
+          concierge: 3,
+          boardroom: 2,
+          super: 3,
+          grantwriter: 3,
+          prefab: 1.5,
+          gilded: 3,
+          tenured: 2.5,
+          gambler: 2,
+        };
+        let bestPair = null;
+        p.hand.forEach((c) => {
+          const cv = cardValue(c, p, g);
+          req.offer.forEach((k) => {
+            const price = req.prices ? req.prices[k] : req.price;
+            if (p.money < price + 3 || charmFits(k, c) !== true) return;
+            const v = cv * (w[k] || 1) - price;
+            if (!bestPair || v > bestPair.v) bestPair = { card: c.uid, charm: k, v };
+          });
+        });
+        pick = bestPair && bestPair.v > 3 ? { card: bestPair.card, charm: bestPair.charm } : null;
         break;
       }
       case 'tunnel':

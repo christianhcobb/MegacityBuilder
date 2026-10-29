@@ -1,6 +1,6 @@
 {
   "name": "megacity-developers",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A two-player mobile deck-builder about rival skyscraper developers who draft from a shared pool.",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "sim": "node src/sim/sim.js",
-    "check": "npm run lint && npm run test && npm run build"
+    "check": "npm run lint && npm run test && npm run build",
+    "meta": "node src/sim/meta.js"
   },
   "keywords": [],
   "author": "",

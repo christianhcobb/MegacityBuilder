@@ -1,0 +1,11 @@
+{
+  "name": "Megacity Developers",
+  "short_name": "Megacity",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#dff4ff",
+  "theme_color": "#23263a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

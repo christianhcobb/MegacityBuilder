@@ -1,7 +1,7 @@
 // Rules of play: cards, economy, turn flow, scoring. Pure functions over a game object; no DOM, no timers.
 import { makeRng, shuffle } from './rng.js';
 import { countType, countLook, typeSet, neighbours, hasType, uniformLook, expand } from './board.js';
-import { CATALOG, CHARMS, TIERS, ZONES, MAP_ZONES, BASE_DECK, STARTER, FIRMS, BOUNTIES, EVENTS, ONE_SHOT, validPack } from './data.js';
+import { CATALOG, CHARMS, TIERS, ZONES, MAP_ZONES, BASE_DECK, STARTER, FIRMS, BOUNTIES, EVENTS, ONE_SHOT, BANK_RATE, TYPE_NAME, validPack } from './data.js';
 
 export { countType, countLook, typeSet, neighbours, hasType, uniformLook, expand };
 
@@ -17,7 +17,21 @@ export function cardRev(c, tier) {
   return (c.rev || 0) + (c.charms || []).filter((k) => k === 'lease').length + (c.ps && c.ps.rev ? c.ps.rev * (tier || 0) : 0);
 }
 export function cardPts(c, tier) {
-  return (c.pts || 0) + (c.charms || []).filter((k) => k === 'architect').length + (c.ps && c.ps.pts ? c.ps.pts * (tier || 0) : 0);
+  const ch = c.charms || [];
+  return (
+    (c.pts || 0) +
+    ch.filter((k) => k === 'architect').length +
+    2 * ch.filter((k) => k === 'gilded').length +
+    ch.filter((k) => k === 'tenured').length * (tier || 0) +
+    (c.ps && c.ps.pts ? c.ps.pts * (tier || 0) : 0)
+  );
+}
+// Effective height: Arcology Pods count double for cap requirements.
+export function towerHeight(pl) {
+  return pl.blocks.length + pl.blocks.filter((b) => b.key === 'arcology').length;
+}
+export function isGround(c) {
+  return c.type === 'S' || !!c.ground;
 }
 // base prestige: finished-tower points with tier 0, so tiers do not feed themselves
 export function basePrestige(p) {
@@ -46,7 +60,12 @@ export function blockRev(p, i, j) {
   if (j === 0 && p.tier >= 4 && p.plots[i].cap) r += 1; // Iconic
   if (b.type === 'S') r += nb.filter((n) => hasType(n, 'R')).length;
   if (b.type === 'O' && j === 0 && nb.some((n) => hasType(n, 'O'))) r += 1;
-  if (b.type === 'C' && p.firm && p.firm.id === 'okafor') r += 1;
+  if (b.type === 'C' && hasHq(p, 'hq_okafor')) r += 1;
+  if (hasCharm(b, 'anchor') && p.plots[i].blocks.length > j + 1) r += 2;
+  if (hasCharm(b, 'boardroom')) r += nb.filter((n) => hasType(n, 'O')).length;
+  if (b.key === 'parking') r += Math.floor((p.plots[i].blocks.length - 1 - j) / 2);
+  if (j === 0) r += nb.filter((n) => n.blocks.some((x) => x.key === 'streetmarket')).length;
+  if (b.key === 'mirror' && j > 0) r += blockRev(p, i, j - 1);
   if (b.key === 'megamall') r += nb.reduce((a, n) => a + n.blocks.filter((x) => x.type === 'R').length, 0) - nb.filter((n) => hasType(n, 'R')).length;
   const above = p.plots[i].blocks[j + 1];
   if (b.type === 'S' && above && above.type === 'O') r += 1; // office workers shop downstairs
@@ -65,7 +84,13 @@ export function blockPts(p, i, j) {
   const nb = neighbours(p, i);
   if (b.type === 'H' && nb.some((n) => hasType(n, 'S'))) s += 2;
   if (b.type === 'R' && nb.some((n) => hasType(n, 'C'))) s += 1;
-  if (b.type === 'O' && p.firm && p.firm.id === 'kessler') s += 1;
+  if (b.type === 'O' && hasHq(p, 'hq_kessler')) s += 1;
+  if (hasCharm(b, 'concierge')) s += j;
+  if (hasCharm(b, 'super')) s += Math.min(3, p.plots[i].blocks.filter((x, k) => k !== j && x.type === 'R').length);
+  if (b.key === 'datacenter') s -= nb.filter((n) => hasType(n, 'R')).length;
+  if (b.key === 'loft' && typeSet(p.plots[i]).size >= 3) s += 2;
+  if (b.key === 'lobby') s += Math.min(4, p.plots[i].blocks.length - 1 - j);
+  if (b.key === 'mirror' && j > 0) s += blockPts(p, i, j - 1);
   if (b.type === 'R' && hasHq(p, 'designstudio')) s += 1;
   const pl = p.plots[i];
   if (pl.cap && b.look === 'stone' && hasHq(p, 'heritage')) s += 1;
@@ -91,7 +116,10 @@ export function plotPts(p, i) {
   return p.plots[i].blocks.reduce((s, b, j) => s + blockPts(p, i, j), 0);
 }
 export function grossRev(p) {
-  return p.plots.reduce((s, pl, i) => s + (pl.cap ? plotIncome(p, i) : 0), 0);
+  const s = p.game ? p.game.settings : {};
+  const capPer = s.rentCapPerTower || 99;
+  const v = p.plots.reduce((a, pl, i) => a + (pl.cap ? Math.min(capPer, plotIncome(p, i)) : 0), 0);
+  return s.rentDiv ? Math.ceil(v / s.rentDiv) : v;
 }
 export function potentialRev(p) {
   return p.plots.reduce((s, pl, i) => s + plotIncome(p, i), 0);
@@ -99,17 +127,24 @@ export function potentialRev(p) {
 export function grossPts(p) {
   return p.plots.reduce((s, pl, i) => s + plotPts(p, i), 0);
 }
+function g_base(p) {
+  return p.game && p.game.settings.baseIncome != null ? p.game.settings.baseIncome : 2;
+}
 export function playerIncome(p) {
-  return 2 + grossRev(p) + p.opsBonus;
+  return g_base(p) + grossRev(p) + p.opsBonus;
 }
 export function capCost(g, pl, p) {
   if (g.settings.freeBuilds || g.mods.freeCaps) return 0;
   const h = pl ? pl.blocks.length : 2;
   const stone = pl ? pl.blocks.filter((b) => b.look === 'stone').length : 0;
-  return Math.max(1, 2 + Math.floor(Math.max(0, h - 2) / 2) - (p ? countType(p, 'C') : 0) - (p && p.tier >= 2 ? 1 : 0) - stone);
+  return Math.max(1, (g.settings.capBase || 3) + Math.floor(Math.max(0, h - 2) / 2) - (p ? countType(p, 'C') : 0) - (p && p.tier >= 2 ? 1 : 0) - stone);
 }
+// Slot 1 holds the developer's signature HQ from the start; reputation opens more.
 export function hqSlots(p) {
-  return 1 + (p.tier >= 2 ? 1 : 0) + (p.tier >= 4 ? 1 : 0);
+  return 2 + (p.tier >= 2 ? 1 : 0) + (p.tier >= 4 ? 1 : 0);
+}
+export function bankStars(p) {
+  return Math.floor(p.money / (hasHq(p, 'treasury') ? 6 : BANK_RATE));
 }
 export function hasHq(p, k) {
   return p.hq.some((c) => c.key === k);
@@ -154,6 +189,18 @@ export function capBonus(pl, cap, game) {
     case 'landmark':
       b = 2 * h;
       break;
+    case 'solar':
+      b += pl.blocks.filter((x) => x.look === 'glass').length;
+      break;
+    case 'billboard': {
+      if (!game) break;
+      game.players.forEach((p) =>
+        p.plots.forEach((o, i) => {
+          if (o === pl) b += 2 * neighbours(p, i).filter((n) => hasType(n, 'S')).length;
+        })
+      );
+      break;
+    }
     case 'spire': {
       if (!game) break;
       const mine = h;
@@ -172,11 +219,12 @@ export function capBonus(pl, cap, game) {
 
 export function blockCost(g, c, pl, p) {
   if (g.settings.freeBuilds) return 0;
-  let cost = c.cost + (g.mods.costDelta || 0);
+  let cost = c.cost + (g.mods.costDelta || 0) + (g.settings.costTune || 0);
   if (c.type === 'R') cost += g.mods.resDelta || 0;
   if (pl && pl.zone === 'transit') cost -= 1;
   if (pl && c.look !== 'glass') cost += Math.max(0, pl.blocks.length - 2); // every floor above the 3rd costs $1 more (Glass is exempt)
-  if (p && p.firm && p.firm.id === 'harlow' && c.type === 'R') cost -= 1;
+  if (p && c.type === 'R' && hasHq(p, 'hq_harlow')) cost -= 1;
+  if (pl && pl.blocks.some((b) => b.key === 'atrium')) cost -= 1;
   if (hasCharm(c, 'foreman')) cost -= 1;
   if (p && c.look === 'glass' && hasHq(p, 'glassworks')) cost -= 1;
   return Math.max(0, cost);
@@ -260,6 +308,7 @@ export function chooseFirm(g, pi, firmId, pack) {
   const f = FIRMS.find((x) => x.id === firmId);
   const p = g.players[pi];
   p.firm = f;
+  if (f.hq && !p.hq.length) p.hq.push(makeCard(f.hq));
   const use = pack && validPack(f, pack) ? pack : f.pack;
   p.pack = use;
   g.communal.push(...expand(use, (k) => Object.assign(makeCard(k), { firm: f.id })));
@@ -310,11 +359,35 @@ export function startTurn(g) {
   p.money += inc;
   log(g, `${p.name} +${inc} income`);
   record(g, 'income', p.idx, { inc });
+  const rolls = [];
+  p.plots.forEach((pl, i) => {
+    if (!pl.cap) return;
+    pl.blocks.forEach((b) => {
+      if (b.key === 'casino' && !g.mods.noRent) {
+        const win = g.rng() < 0.5;
+        if (win) p.money += 5;
+        rolls.push({ plot: i, what: 'casino', roll: win ? 'heads' : 'tails', gain: win ? 5 : 0 });
+      }
+    });
+  });
+  if (rolls.length) {
+    rolls.forEach((f) => log(g, `${p.name}'s Casino: ${f.roll}${f.gain ? ', +$' + f.gain : ''}`));
+    record(g, 'rolls', p.idx, { rolls });
+    g.actions.push({ pi: p.idx, kind: 'rolls', rolls });
+  }
+  const o = g.players[1 - p.idx];
+  const nm = o.plots.reduce((a, pl) => a + (pl.cap ? pl.blocks.filter((b) => b.key === 'nightmarket').length : 0), 0);
+  if (nm && !g.mods.noRent) {
+    o.money += nm;
+    log(g, `${o.name}'s Night Market earns $${nm} after hours`);
+  }
   refreshTier(p);
   drawCards(g, p, handSize(g, p));
   if (g.mods.charm && !p.charmedThisRound && p.hand.length) {
     const keys = shuffle(Object.keys(CHARMS), g.rng).slice(0, 3);
-    g.pending.push({ type: 'charm', pi: p.idx, offer: keys, price: 2 });
+    const prices = {};
+    keys.forEach((k) => (prices[k] = 1 + Math.floor(g.rng() * 3)));
+    g.pending.push({ type: 'charm', pi: p.idx, offer: keys, prices, price: 2 });
   }
   if (p.idx === 0 && !p.bounty && p.bountyOffer) g.pending.unshift({ type: 'bounty', pi: 0 });
   if (p.idx === 1 && !p.bounty && p.bountyOffer) g.pending.unshift({ type: 'bounty', pi: 1 });
@@ -365,11 +438,12 @@ export function canPlay(g, pi, uid, plotIdx) {
       maxH = pl.zone === 'low' ? 3 : g.settings.maxHeight;
     if (h >= maxH) return pl.zone === 'low' ? 'height limit 3' : `max height ${maxH}`;
     if (h && pl.blocks[h - 1].type === 'H') return 'nothing builds above a Hotel';
-    if (c.type === 'S' && h) return 'Retail only on the ground floor';
+    if (isGround(c) && h) return c.type === 'S' ? 'Retail only on the ground floor' : 'ground floor only';
     if (!h && pl.zone === 'resi' && c.type !== 'R' && !hasCharm(c, 'variance')) return 'ground floor must be Residential';
     if (!h && pl.zone === 'comm' && c.type !== 'O' && c.type !== 'S' && !hasCharm(c, 'variance')) return 'ground floor must be Office or Retail';
     const perTower = pl.crane && !g.mods.noCrane ? 2 : 1;
-    if (pl.builtThisTurn >= perTower) return perTower === 1 ? 'tower in progress: 1 block per turn (a crane allows 2)' : 'crane limit: 2 blocks per turn';
+    if (pl.builtThisTurn >= perTower && !hasCharm(c, 'prefab'))
+      return perTower === 1 ? 'tower in progress: 1 block per turn (a crane allows 2)' : 'crane limit: 2 blocks per turn';
     if (p.money < blockCost(g, c, pl, p)) return 'not enough money';
     return true;
   }
@@ -384,6 +458,7 @@ export function canPlay(g, pi, uid, plotIdx) {
     if (c.key === 'crane' && pl.crane) return 'already has a crane';
     if (c.key === 'demolish' && !pl.blocks.length) return 'nothing to demolish';
     if (c.key === 'tunnel' && !pl.blocks.length) return 'pick a tower with floors';
+    if (c.key === 'elevator' && !pl.builtThisTurn) return 'pick a tower that already took a floor this turn';
     return true;
   }
   if (c.kind === 'cap') {
@@ -392,8 +467,8 @@ export function canPlay(g, pi, uid, plotIdx) {
     if (pl.cap) return 'already capped';
     if (p.noCap) return 'zoning challenge: no caps this turn';
     const need = pl.zone === 'landmark' ? Math.max(3, g.settings.capMin) : g.settings.capMin;
-    if (pl.blocks.length < need) return `needs ${need}+ blocks`;
-    if (c.key === 'landmark' && pl.blocks.length < 5) return 'Landmark Status needs 5+ floors';
+    if (towerHeight(pl) < need) return `needs ${need}+ blocks`;
+    if (c.key === 'landmark' && towerHeight(pl) < 5) return 'Landmark Status needs 5+ floors';
     if (p.money < capCost(g, pl, p)) return `capping costs $${capCost(g, pl, p)}`;
     return true;
   }
@@ -426,16 +501,34 @@ export function playCard(g, pi, uid, plotIdx) {
     p.plots[plotIdx].builtThisTurn++;
     if (hasCharm(c, 'expedite')) p.deck.unshift(c);
     else p.discard.push(c);
+    // on-build effects (the lucky ones roll the game's seeded dice, so logs replay)
+    const fx = [];
+    if (hasCharm(c, 'grantwriter') && c.type === 'C') {
+      p.money += 3;
+      fx.push({ what: 'grantwriter', gain: 3 });
+    }
+    if (hasCharm(c, 'gambler')) {
+      const win = g.rng() < 0.5;
+      if (win) p.money += 4;
+      fx.push({ what: 'gambler', roll: win ? 'heads' : 'tails', gain: win ? 4 : 0 });
+    }
+    if (c.key === 'lucky') {
+      const roll = 1 + Math.floor(g.rng() * 6);
+      const gain = roll <= 3 ? 2 : 5;
+      p.money += gain;
+      fx.push({ what: 'lucky', roll, gain });
+    }
+    fx.forEach((f) => log(g, `${p.name}: ${CATALOG[c.key].name} — ${f.roll != null ? 'rolls ' + f.roll + ', ' : ''}+$${f.gain}`));
     log(g, `${p.name} builds ${c.name} on plot ${plotIdx + 1}`);
-    g.actions.push({ pi, kind: 'build', card: c, plot: plotIdx });
-    record(g, 'build', pi, { card: c.key, plot: plotIdx, cost: blockCost(g, c, p.plots[plotIdx], p) });
+    g.actions.push({ pi, kind: 'build', card: c, plot: plotIdx, fx });
+    record(g, 'build', pi, { card: c.key, plot: plotIdx, cost: blockCost(g, c, p.plots[plotIdx], p), fx: fx.length ? fx : undefined });
     return true;
   }
   if (c.kind === 'cap') {
     p.money -= capCost(g, p.plots[plotIdx], p);
     p.plots[plotIdx].cap = c;
     refreshTier(p);
-    if (hasHq(p, 'unionhall')) p.money += 2;
+    if (hasHq(p, 'unionhall')) p.money += 3;
     g.actions.push({ pi, kind: 'cap', card: c, plot: plotIdx });
     record(g, 'cap', pi, { card: c.key, plot: plotIdx });
     if (p.plots.every((pl) => pl.cap) && g.endTriggeredBy < 0) {
@@ -515,6 +608,16 @@ export function playCard(g, pi, uid, plotIdx) {
     case 'crane':
       p.plots[plotIdx].crane = true;
       break;
+    case 'elevator':
+      p.plots[plotIdx].builtThisTurn = 0;
+      break;
+    case 'windfall': {
+      const roll = 1 + Math.floor(g.rng() * 6);
+      p.money += roll;
+      log(g, `${p.name} rolls ${roll} on Windfall`);
+      g.lastRoll = roll;
+      break;
+    }
     case 'inspect':
       o.incomePenalty += 2;
       break;
@@ -523,8 +626,9 @@ export function playCard(g, pi, uid, plotIdx) {
       break;
   }
   log(g, `${p.name} plays ${c.name}`);
-  g.actions.push({ pi, kind: 'play', card: c, plot: plotIdx });
-  record(g, 'play', pi, { card: c.key, plot: plotIdx });
+  const roll = c.key === 'windfall' ? g.lastRoll : undefined;
+  g.actions.push({ pi, kind: 'play', card: c, plot: plotIdx, roll });
+  record(g, 'play', pi, { card: c.key, plot: plotIdx, roll });
   return true;
 }
 // Subcontract: discard a block card from hand, pay $1, draw a card. The way out of a full board.
@@ -555,11 +659,24 @@ export function anyLegalPlay(g, pi) {
 export function endTurn(g, pi) {
   if (g.gameOver || g.turn !== pi || g.phase !== 'act' || g.pending.length) return false;
   const p = cur(g);
+  if (p.plots.every((pl) => pl.cap)) {
+    // the block is finished: nothing left to build, so no draft
+    finishTurn(g);
+    return true;
+  }
   while (g.market.length < marketSize(g, p) && g.communal.length) g.market.push(g.communal.shift()); // Noticed: see 4
   g.phase = 'draft';
   g.pending.push({ type: 'draft', pi });
   for (let i = 0; i < p.extraDrafts; i++) g.pending.push({ type: 'draft', pi });
   return true;
+}
+// Which cards a specialist can join.
+export function charmFits(k, c) {
+  const f = CHARMS[k].for;
+  if (f === 'any') return true;
+  if (f === 'block') return c.kind === 'block' ? true : 'joins floor crews only';
+  if (f === 'cap') return c.kind === 'cap' ? true : 'joins caps only';
+  return c.kind === 'block' && c.type === f ? true : `joins ${TYPE_NAME[f]} floors only`;
 }
 export function resolve(g, req, choiceUid) {
   const p = g.players[req.pi];
@@ -579,8 +696,10 @@ export function resolve(g, req, choiceUid) {
       }
       const c = p.hand.find((x) => x.uid === ch.card);
       if (!c || !req.offer.includes(ch.charm)) return false;
-      if (p.money < req.price) return false;
-      p.money -= req.price;
+      if (charmFits(ch.charm, c) !== true) return false;
+      const price = req.prices ? req.prices[ch.charm] : req.price;
+      if (p.money < price) return false;
+      p.money -= price;
       c.charms.push(ch.charm);
       p.charmedThisRound = true;
       log(g, `${p.name} hires ${CHARMS[ch.charm].name} for ${c.name}`);
@@ -668,7 +787,7 @@ export function finishTurn(g) {
 // Scoring v0.5: only finished towers count. Towers + bounty + finisher bonus. Per-tower detail for the breakdown view.
 export function score(g, p) {
   refreshTier(p);
-  const s = { towers: 0, bounty: 0, finisher: 0, total: 0, detail: [] };
+  const s = { towers: 0, bounty: 0, finisher: 0, bank: 0, total: 0, detail: [] };
   p.plots.forEach((pl, i) => {
     const floors = pl.blocks.reduce((a, b) => a + cardPts(b, p.tier), 0);
     const adj = plotPts(p, i) - floors;
@@ -679,7 +798,8 @@ export function score(g, p) {
   });
   if (p.bounty && p.bounty.check(p)) s.bounty = p.bounty.pts;
   if (g.endTriggeredBy === p.idx) s.finisher = g.settings.finisherBonus;
-  s.total = s.towers + s.bounty + s.finisher;
+  s.bank = bankStars(p);
+  s.total = s.towers + s.bounty + s.finisher + s.bank;
   return s;
 }
 // The final (rebuttal) turn: the block is complete and the other player is taking their last turn.
@@ -726,7 +846,7 @@ export function gameRecord(g) {
       deck: deckTotal(p),
       removed: p.removed.map((c) => c.key),
     })),
-    scores: g.result ? g.result.scores.map((s) => ({ towers: s.towers, bounty: s.bounty, finisher: s.finisher, total: s.total })) : null,
+    scores: g.result ? g.result.scores.map((s) => ({ towers: s.towers, bounty: s.bounty, finisher: s.finisher, bank: s.bank, total: s.total })) : null,
     winner: g.result ? g.result.winner : null,
   };
 }

@@ -56,6 +56,64 @@ export const CATALOG = {
     text: 'Earns +$1 per other Retail floor in the whole city, both players.',
   },
   convention: { name: 'Convention Hotel', kind: 'block', type: 'H', look: 'glass', cost: 4, rev: 0, pts: 2, text: '+1★ per Office floor below it.' },
+  // v1.2 floors: stranger interactions. Realism is optional.
+  mirror: { name: 'Mirror Hall', kind: 'block', type: 'O', look: 'glass', cost: 3, rev: 0, pts: 0, text: 'Copies the $ and ★ of the floor below it.' },
+  atrium: { name: 'Glass Atrium', kind: 'block', type: 'C', look: 'glass', cost: 2, rev: 0, pts: 1, text: 'Every floor built above it costs $1 less.' },
+  datacenter: {
+    name: 'Data Centre',
+    kind: 'block',
+    type: 'O',
+    look: 'brick',
+    cost: 3,
+    rev: 3,
+    pts: 0,
+    text: 'Earns $3. −1★ per neighbouring tower with Residential.',
+  },
+  casino: { name: 'Casino', kind: 'block', type: 'S', look: 'stone', cost: 4, rev: 0, pts: 1, fx: 'dice', text: 'Each income, flip a coin: +$5 or nothing.' },
+  nightmarket: {
+    name: 'Night Market',
+    kind: 'block',
+    type: 'S',
+    look: 'brick',
+    cost: 2,
+    rev: 1,
+    pts: 1,
+    text: "Also earns $1 at the start of the rival's turn.",
+  },
+  arcology: {
+    name: 'Arcology Pod',
+    kind: 'block',
+    type: 'R',
+    look: 'glass',
+    cost: 4,
+    rev: 0,
+    pts: 2,
+    text: 'Counts as 2 floors for cap height and Tall Order.',
+  },
+  loft: { name: 'Artist Lofts', kind: 'block', type: 'R', look: 'brick', cost: 2, rev: 0, pts: 1, text: '+2★ if this tower has 3 or more types.' },
+  parking: { name: 'Parking Deck', kind: 'block', type: 'C', look: 'stone', cost: 1, rev: 0, pts: 0, ground: true, text: 'Earns $1 per 2 floors above it.' },
+  lobby: { name: 'Grand Lobby', kind: 'block', type: 'C', look: 'stone', cost: 2, rev: 0, pts: 1, ground: true, text: '+1★ per floor above it (max 4).' },
+  streetmarket: {
+    name: 'Street Market',
+    kind: 'block',
+    type: 'S',
+    look: 'brick',
+    cost: 1,
+    rev: 1,
+    pts: 0,
+    text: "Neighbouring towers' ground floors earn +$1.",
+  },
+  lucky: {
+    name: 'Lucky Dragon Diner',
+    kind: 'block',
+    type: 'S',
+    look: 'brick',
+    cost: 2,
+    rev: 1,
+    pts: 0,
+    fx: 'dice',
+    text: 'When built: roll. 1–3 gain $2, 4–6 gain $5.',
+  },
 
   flatroof: { name: 'Flat Roof', kind: 'cap', pts: 1, text: 'No bonus. Gets the job done.' },
   garden: { name: 'Rooftop Garden', kind: 'cap', pts: 1, text: '+2 per Residential block below' },
@@ -66,6 +124,8 @@ export const CATALOG = {
   spire: { name: 'Spire', kind: 'cap', pts: 2, text: '+4 if tallest capped building in the city' },
   rooftopbar: { name: 'Rooftop Bar', kind: 'cap', pts: 0, ps: { pts: 1 }, text: '+1★ per Hotel floor in the whole city, both players' },
   landmark: { name: 'Landmark Status', kind: 'cap', pts: 0, text: 'Needs 5+ floors. +2★ per floor' },
+  billboard: { name: 'Billboard', kind: 'cap', pts: 0, text: '+2★ per neighbouring tower with Retail' },
+  solar: { name: 'Solar Array', kind: 'cap', pts: 1, text: '+1★ per Glass floor below. Immune to Heat Wave.' },
 
   grant: { name: 'City Grant', kind: 'ops', ps: { money: 1 }, text: '+$3' },
   permit: { name: 'Permit Expediter', kind: 'ops', text: 'Draw 2 cards' },
@@ -76,7 +136,7 @@ export const CATALOG = {
   presale: { name: 'Pre-Sale', kind: 'ops', text: 'Gain $1 per floor on your tallest unfinished tower' },
   demolish: { name: 'Demolition Crew', kind: 'ops', target: 'plot', text: 'Remove the top floor of one of your towers. Refund $2.' },
   tunnel: { name: 'Tunnel Boring', kind: 'ops', target: 'plot', text: 'Swap the positions of two of your towers. Zones stay put.' },
-  unionhall: { name: 'Union Hall', kind: 'hq', text: 'HQ: gain $2 whenever you finish a tower.' },
+  unionhall: { name: 'Union Hall', kind: 'hq', text: 'HQ: gain $3 whenever you finish a tower.' },
   designstudio: { name: 'Design Studio', kind: 'hq', text: 'HQ: your Residential floors score +1★.' },
   pressoffice: { name: 'Press Office', kind: 'hq', text: 'HQ: gain $1 whenever you draft a card.' },
   glassworks: { name: 'Glassworks', kind: 'hq', text: 'HQ: Glass floors cost $1 less.' },
@@ -84,16 +144,33 @@ export const CATALOG = {
   lobbyist: { name: 'Lobbyist', kind: 'hq', text: "HQ: the rival's interference cards do not affect you." },
   poach: { name: 'Poach', kind: 'int', text: "Take the top card of the rival's discard pile into yours. One use." },
   crane: { name: 'Tower Crane', kind: 'ops', target: 'plot', text: 'Put a crane on a tower. It takes 2 blocks a turn for the rest of the game.' },
+  elevator: { name: 'Express Elevator', kind: 'ops', target: 'plot', text: 'One tower may take a second floor this turn.' },
+  windfall: { name: 'Windfall', kind: 'ops', fx: 'dice', text: 'Roll: gain $1 to $6.' },
+  // Developer signature HQs: installed from the start. The developer's specialty, made visible.
+  hq_harlow: { name: 'Housing Dept', kind: 'hq', signature: true, text: 'HQ: Residential floors cost $1 less.' },
+  hq_kessler: { name: 'Leasing Dept', kind: 'hq', signature: true, text: 'HQ: Office floors score +1★.' },
+  hq_okafor: { name: 'Planning Dept', kind: 'hq', signature: true, text: 'HQ: Civic floors also earn $1.' },
+  treasury: { name: 'Treasury', kind: 'hq', text: 'HQ: banked money scores 1★ per $6 instead of $10.' },
 
   inspect: { name: 'Inspection', kind: 'int', text: 'Opponent income -2 next turn' },
   zoning: { name: 'Zoning Challenge', kind: 'int', text: 'Opponent cannot cap on their next turn' },
 };
+// Charms (specialists). for: which cards they can join. Offered 3 at a time at a Talent Fair, each at its own price.
 export const CHARMS = {
-  lease: { name: 'Leasing Agent', text: '+1 revenue' },
-  architect: { name: 'Architect', text: '+1 prestige' },
-  foreman: { name: 'Foreman', text: 'Costs 1 less' },
-  variance: { name: 'Zoning Variance', text: 'Ignores ground-floor zone rules' },
-  expedite: { name: 'Expediter', text: 'Returns to the top of your deck after play' },
+  lease: { name: 'Leasing Agent', for: 'block', text: '+$1 rent.' },
+  architect: { name: 'Architect', for: 'block', text: '+1★.' },
+  foreman: { name: 'Foreman', for: 'block', text: 'Costs $1 less.' },
+  variance: { name: 'Zoning Variance', for: 'block', text: 'Ignores ground-floor zone rules.' },
+  expedite: { name: 'Expediter', for: 'any', text: 'Retain: returns to the top of your deck after play.' },
+  anchor: { name: 'Anchor Tenant', for: 'S', text: 'Retail: +$2 rent once something is built above it.' },
+  concierge: { name: 'Concierge', for: 'H', text: 'Hotel: +1★ per floor below it.' },
+  boardroom: { name: 'Boardroom', for: 'O', text: 'Office: +$1 rent per neighbouring tower with Office.' },
+  super: { name: 'Superintendent', for: 'R', text: 'Residential: +1★ per other Residential floor in the tower (max 3).' },
+  grantwriter: { name: 'Grant Writer', for: 'C', text: 'Civic: gain $3 when built.' },
+  prefab: { name: 'Prefab Kit', for: 'block', text: 'Can be built on a tower that already took a floor this turn.' },
+  gilded: { name: 'Gilder', for: 'cap', text: 'Cap: +2★.' },
+  tenured: { name: 'Tenured Crew', for: 'block', text: 'Prestige: +1★ per reputation tier.' },
+  gambler: { name: 'Gambler', for: 'block', text: 'When built: flip a coin, +$4 or nothing.' },
 };
 export const LOOKS = {
   glass: { name: 'Glass', trait: 'Builds tall: no extra cost for height.' },
@@ -103,13 +180,14 @@ export const LOOKS = {
 // Reputation tiers. Prestige = points banked in finished towers (base, before prestige-sensitive bonuses).
 export const TIERS = [
   { at: 0, name: 'Unknown', perk: '' },
-  { at: 6, name: 'Noticed', perk: 'The market shows 4 cards.' },
-  { at: 12, name: 'Respected', perk: 'Caps cost $1 less.' },
-  { at: 18, name: 'Renowned', perk: 'Hand size 6.' },
-  { at: 26, name: 'Iconic', perk: 'Finished towers earn +$1 rent each.' },
+  { at: 8, name: 'Noticed', perk: 'The market shows 4 cards.' },
+  { at: 18, name: 'Respected', perk: 'Caps cost $1 less.' },
+  { at: 30, name: 'Renowned', perk: 'Hand size 6.' },
+  { at: 44, name: 'Iconic', perk: 'Finished towers earn +$1 rent each.' },
 ];
 export const TYPE_NAME = { R: 'Residential', O: 'Office', S: 'Retail', H: 'Hotel', C: 'Civic' };
 // Placement rules. Types carry a vertical rule and an adjacency bonus; plots carry a zone.
+export const BANK_RATE = 10; // $ per 1★ of banked money at game end
 export const TYPE_RULES = {
   R: { rule: '', bonus: '+1★ next to Civic. +1★ above Retail or Civic.' },
   O: { rule: '', bonus: 'Tower earns +$1 next to Office. Retail below it earns +$1.' },
@@ -128,23 +206,27 @@ export const ZONES = {
 export const MAP_ZONES = ['resi', 'comm', 'low', 'landmark', 'transit', 'open'];
 
 export const BASE_DECK = [
-  ['studio', 6],
-  ['condo', 4],
-  ['office', 6],
-  ['corner', 3],
-  ['foodhall', 4],
+  ['studio', 3],
+  ['condo', 2],
+  ['office', 3],
+  ['corner', 2],
+  ['foodhall', 2],
   ['hotel', 3],
-  ['library', 3],
+  ['library', 2],
   ['clinic', 2],
-  ['flatroof', 5],
+  ['flatroof', 3],
   ['garden', 2],
   ['deck', 2],
   ['helipad', 1],
   ['spire', 1],
+  ['billboard', 1],
+  ['solar', 1],
   ['grant', 2],
   ['permit', 2],
   ['siteoffice', 2],
-  ['crane', 3],
+  ['crane', 2],
+  ['elevator', 2],
+  ['windfall', 2],
   ['survey', 1],
   ['zoning', 1],
   ['inspect', 1],
@@ -156,10 +238,22 @@ export const BASE_DECK = [
   ['unionhall', 1],
   ['pressoffice', 1],
   ['glassworks', 1],
+  ['treasury', 1],
   ['cowork', 2],
   ['community', 1],
   ['bazaar', 1],
   ['convention', 1],
+  ['mirror', 2],
+  ['atrium', 2],
+  ['datacenter', 1],
+  ['casino', 1],
+  ['nightmarket', 2],
+  ['arcology', 1],
+  ['loft', 2],
+  ['parking', 2],
+  ['lobby', 2],
+  ['streetmarket', 2],
+  ['lucky', 1],
 ];
 export const STARTER = [
   ['studio', 3],
@@ -178,7 +272,10 @@ export const FIRMS = [
     name: 'Ines Harlow',
     tag: 'Housing developer',
     passive: 'Residential blocks cost 1 less.',
+    hq: 'hq_harlow',
     collection: [
+      ['arcology', 1],
+      ['loft', 2],
       ['condo', 3],
       ['studio', 3],
       ['garden', 2],
@@ -203,7 +300,11 @@ export const FIRMS = [
     name: 'Dov Kessler',
     tag: 'Commercial builder',
     passive: 'Office blocks score +1 prestige.',
+    hq: 'hq_kessler',
     collection: [
+      ['mirror', 1],
+      ['datacenter', 1],
+      ['casino', 1],
       ['corner', 3],
       ['foodhall', 2],
       ['deck', 2],
@@ -230,7 +331,11 @@ export const FIRMS = [
     name: 'Ade Okafor',
     tag: 'Civic planner',
     passive: 'Civic floors also earn $1.',
+    hq: 'hq_okafor',
     collection: [
+      ['atrium', 1],
+      ['lobby', 1],
+      ['parking', 1],
       ['library', 3],
       ['clinic', 2],
       ['skybridge', 2],
@@ -259,7 +364,8 @@ export const NATURES = {
   Exhaust: 'Leaves the game after one use.',
   Prestige: 'Scales with your reputation tier.',
   Retain: 'Returns to the top of your deck instead of the discard.',
-  Ground: 'Ground floor only.',
+  Ground: 'Ground floor only. Needs an empty plot.',
+  Lucky: 'Rolls dice. Anything can happen.',
   Top: 'Always the top floor; nothing builds above it.',
   Target: 'Played onto one of your towers.',
   HQ: 'Leaves your deck and sits in an HQ slot with a permanent effect.',
@@ -271,7 +377,9 @@ export function natures(c) {
   if (ONE_SHOT.includes(c.key)) n.push('Exhaust');
   if (c.ps) n.push('Prestige');
   if (c.charms && c.charms.includes('expedite')) n.push('Retain');
-  if (c.type === 'S') n.push('Ground');
+  if (c.charms && c.charms.includes('tenured') && !c.ps) n.push('Prestige');
+  if (c.type === 'S' || c.ground) n.push('Ground');
+  if (c.fx === 'dice' || (c.charms && c.charms.includes('gambler'))) n.push('Lucky');
   if (c.type === 'H') n.push('Top');
   if (c.target === 'plot') n.push('Target');
   return n;
@@ -292,7 +400,7 @@ export const BOUNTIES = [
     name: 'Tall Order',
     text: 'A capped building 6 or more floors high',
     pts: 6,
-    check: (p) => p.plots.some((pl) => pl.cap && pl.blocks.length >= 6),
+    check: (p) => p.plots.some((pl) => pl.cap && pl.blocks.length + pl.blocks.filter((b) => b.key === 'arcology').length >= 6),
   },
   {
     id: 'mixed',
@@ -315,7 +423,18 @@ export const EVENTS = [
     name: 'Heat Wave',
     mood: 'bad',
     text: 'Glass is an oven. Lose $1 per Glass floor (max $5). Brick shrugs it off.',
-    apply: (g) => g.players.forEach((p) => (p.money = Math.max(0, p.money - Math.min(5, countLook(p, 'glass'))))),
+    apply: (g) =>
+      g.players.forEach(
+        (p) =>
+          (p.money = Math.max(
+            0,
+            p.money -
+              Math.min(
+                5,
+                p.plots.reduce((a, pl) => a + (pl.cap && pl.cap.key === 'solar' ? 0 : pl.blocks.filter((b) => b.look === 'glass').length), 0)
+              )
+          ))
+      ),
   },
   {
     id: 'festival',
@@ -331,8 +450,8 @@ export const EVENTS = [
     text: 'Gain $3 per Hotel floor.',
     apply: (g) => g.players.forEach((p) => (p.money += 3 * countType(p, 'H'))),
   },
-  { id: 'fair', name: 'Talent Fair', mood: 'shop', text: 'Specialists are hiring. Pay $2 to embed one in a card in your hand.', mods: { charm: true } },
-  { id: 'fair2', name: 'Talent Fair', mood: 'shop', text: 'Specialists are hiring. Pay $2 to embed one in a card in your hand.', mods: { charm: true } },
+  { id: 'fair', name: 'Talent Fair', mood: 'shop', text: 'Specialists are hiring. Hire one into a card in your hand.', mods: { charm: true } },
+  { id: 'fair2', name: 'Talent Fair', mood: 'shop', text: 'Specialists are hiring. Hire one into a card in your hand.', mods: { charm: true } },
   { id: 'strike', name: 'Transit Strike', mood: 'bad', text: 'Floors cost $2 more this round.', mods: { costDelta: 2 } },
   { id: 'housing', name: 'Housing Push', mood: 'good', text: 'Residential floors are free this round.', mods: { resDelta: -9 } },
   { id: 'taxhol', name: 'Tax Holiday', mood: 'good', text: 'Caps are free this round.', mods: { freeCaps: true } },
