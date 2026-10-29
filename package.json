@@ -1,0 +1,30 @@
+{
+  "name": "megacity-developers",
+  "version": "1.0.0",
+  "description": "A two-player mobile deck-builder about rival skyscraper developers who draft from a shared pool.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "sim": "node src/sim/sim.js",
+    "check": "npm run lint && npm run test && npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "vite": "^5.4.11",
+    "vite-plugin-singlefile": "^2.0.3",
+    "vitest": "^2.1.8"
+  },
+  "type": "module",
+  "private": true
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Megacity">
+<meta name="theme-color" content="#23263a">
+<title>Megacity Developers</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="home" id="home" hidden>
+  <div class="sun"></div>
+  <div class="cloud" id="cl1" style="top:8%;animation-duration:38s"></div>
+  <div class="cloud" id="cl2" style="top:22%;width:60px;animation-duration:52s;animation-delay:-20s"></div>
+  <div class="sky1" id="sky1"></div>
+  <div class="sky2" id="sky2"></div>
+  <div class="ground"></div>
+  <div class="logo"><h1>Mega<em>city</em><br>Developers</h1><p>Bring ten cards. Fight over all of them.</p></div>
+  <div class="menu">
+    <div class="roster" id="roster"></div>
+    <button class="btn big" id="playAi">Play vs Rival</button>
+    <button class="btn blue" id="playHot">Pass &amp; Play</button>
+    <div class="tiles" id="tiles"></div>
+  </div>
+  <div class="ver" id="ver"></div>
+</div>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <h1>Megacity</h1>
+    <span class="evt" id="evtPill" hidden></span>
+    <span class="round" id="roundLbl">setup</span>
+    <button class="icon" id="logBtn" title="Log" aria-label="Game log">≡</button>
+    <button class="icon" id="setBtn" title="Rules" aria-label="Rules and settings">?</button>
+    <button class="icon" id="homeBtn" title="Home" aria-label="Home">⌂</button>
+  </div>
+  <div class="event" id="eventBar"><b>—</b><span>Pick a developer to start.</span></div>
+  <div class="boards">
+    <div class="side opp" id="oppSide"><div class="stats" id="oppStats"></div><div class="diagram" id="oppDiagram"></div><div class="lots" id="oppLots"></div><span class="expand" id="oppExpand">▾</span></div>
+    <div class="side mine" id="mySide"><div class="stats" id="myStats"></div><div class="hqstrip" id="hqStrip"></div><div class="lots" id="myLots"></div></div>
+  </div>
+  <div class="handrow" id="handrow">
+    <button class="pile draw" id="pileDraw" aria-label="Draw pile"><span class="stack"></span><span class="cnt" id="drawCnt">0</span><span class="plbl">draw</span></button>
+    <div class="hand" id="hand"></div>
+    <button class="pile discard" id="pileDiscard" aria-label="Discard pile"><span class="stack"></span><span class="cnt" id="discCnt">0</span><span class="plbl">discard</span></button>
+  </div>
+  <div class="actions">
+    <div class="hint" id="hint"></div>
+    <button class="btn ghost" id="mktBtn" hidden>Market</button>
+    <button class="btn ghost" id="subBtn" hidden>Subcontract $1</button>
+    <button class="btn" id="endBtn">End turn</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div id="overlay"></div>
+<script type="module" src="/src/ui/main.js"></script>
+</body>
+</html>
