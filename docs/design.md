@@ -15,7 +15,7 @@ Pillars: the draft is the core tension · a tower is a visible commitment · the
 3. **Draw** — 5 cards (6 at Renowned). Reshuffle when the draw pile is empty; on a reshuffle, retire one card from the draw pile (never below 8 cards total).
 4. **Act** — play cards. One floor per tower per turn (two with a crane). Any order, no limit on cards.
 5. **Draft** — take 1 of the 3 market cards (4 at Noticed); the rest stay for the rival. The permit office always sells a Flat Roof for $5.
-6. End of turn discards the hand. If a player has finished six towers, the rival gets one last turn, then score.
+6. End of turn discards the hand. When a sixth tower is capped the rival gets one final turn (flagged loudly in the UI), then score.
 
 ## Cards
 
@@ -28,12 +28,34 @@ Pillars: the draft is the core tension · a tower is a visible commitment · the
 
 - Zones (same map for both, random order): Residential zone (ground floor must be Residential) · Commercial (ground floor Office/Retail) · Height limit 3 · Landmark (3+ to cap, cap +3★) · Transit (floors $1 cheaper) · open.
 - Vertical: Retail only on the ground floor; nothing builds above a Hotel.
+- Ground-only floors (all Retail, plus Parking Deck and Grand Lobby) need an empty plot.
+- Inside a tower: Office above Retail (+$1 to the shop) · Residential above Retail or Civic (+1★) · Hotel above Office (+2★).
 - Neighbours: Retail +$1 per neighbouring tower with Residential · Office tower +$1 next to Office · Hotel +2★ next to Retail · Residential +1★ next to Civic.
 - Materials: Glass has no height surcharge · Brick ignores Tremor and Heat Wave · Stone makes the cap cheaper. A finished tower all in one material scores +1★ per floor.
 
 ## Reputation
 
-Points banked in finished towers set a tier: Noticed 6★ (market shows 4) · Respected 12★ (caps $1 cheaper, 2nd HQ slot) · Renowned 18★ (hand 6) · Iconic 26★ (finished towers +$1 rent, 3rd HQ slot). Prestige-sensitive cards (◈) scale with tier.
+Points banked in finished towers set a tier: Noticed 8★ (market shows 4) · Respected 18★ (caps $1 cheaper, HQ slot) · Renowned 30★ (hand 6) · Iconic 44★ (finished towers +$1 rent, HQ slot). Prestige cards scale with tier and shimmer in the hand once you have one.
+
+## HQ
+
+Each developer's specialty is a signature HQ card installed from the start (Housing Dept: Residential −$1 · Leasing Dept: Office +1★ · Planning Dept: Civic floors earn $1). One more slot is open from the start; Respected and Iconic add two. HQ cards drafted from the pool leave the deck and join it.
+
+## Specialists (charms)
+
+A Talent Fair offers three specialists at random prices ($1–3). Each joins one card in hand for the match. Some join any floor (Leasing Agent, Architect, Foreman, Zoning Variance, Prefab Kit, Tenured Crew, Gambler), some one type (Anchor Tenant: Retail · Concierge: Hotel · Boardroom: Office · Superintendent: Residential · Grant Writer: Civic), Gilder joins caps, Expediter joins anything.
+
+## Banked money
+
+1★ per $10 at game end (Treasury HQ: per $6). Money is abundant late, so this is a tiebreaker, not a strategy.
+
+## Natures
+
+Keywords printed on cards: **Exhaust** (one use, leaves the game) · **Prestige** (scales with reputation tier) · **Retain** (returns to the top of the deck) · **Ground** (needs an empty plot) · **Top** · **Target** (played onto a tower) · **Lucky** (rolls the game's seeded dice) · **HQ**.
+
+## Game logs
+
+Every game produces a versioned record (`MCD.gameRecord(g)`): seed, settings, developers and their ten, zones, events, every action with money and prestige after it, final boards and scores. Copy it from the results screen or the Logs tile and paste it into a playtest issue. The engine is deterministic, so the seed reproduces the game.
 
 ## Scoring
 
@@ -49,3 +71,7 @@ Same starter deck for everyone. The developer gives a passive and a collection t
 ## Known open questions
 
 See `balance.md`. Short version: the finisher wins too often in AI games; glass spires may dominate; late-game money has no sink; HQ needs more cards; the AI ignores Demolition, Tunnel and Lobbyist.
+
+## Balance tooling
+
+`npm run sim` prints the headline numbers (rounds, completion, finisher win rate). `npm run meta -- 2000` plays random developers with random packs and writes `docs/meta.md`: win rate per card, cap, charm, HQ, developer, matchup and bounty. Read it as what a greedy AI finds, not as the human meta.

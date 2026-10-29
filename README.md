@@ -2,7 +2,7 @@
 
 A two-player mobile deck-builder about rival skyscraper developers. Each player brings ten cards into a shared pool, drafts from it every turn, and races to finish six towers on a city block — or out-builds the racer with taller, better-planned ones.
 
-**Play the current build:** `main` deploys to https://christianhcobb.github.io/megacitybuilder/. On a phone, open it in Safari, Share → *Add to Home Screen* for a full-screen app.
+**Play the current build:** `main` deploys to https://christianhcobb.github.io/MegacityBuilder/. On a phone, open it in Safari, Share → *Add to Home Screen* for a full-screen app.
 
 ## Running it
 
@@ -40,7 +40,7 @@ The UI only ever talks to the engine through `MCD.*`. Keep it that way: the engi
 2. If it needs an effect beyond its numbers, add a `case` in `playCard` / `capBonus` / `blockPts` / `blockRev` in `rules.js`. If it is an HQ card, its effect is checked with `hasHq(p, key)` wherever it applies.
 3. Give it an illustration in `src/ui/art.js` (`blocks`, `caps` or `ops` maps; the sheet of all cards is a good reference for the style: bold outline, flat colour, a little scene).
 4. Put it in `BASE_DECK` or a developer's `collection`.
-5. Run `npm test` and `npm run sim`, and paste the sim numbers in the PR.
+5. Run `npm test` and `npm run sim`, `npm run meta` (writes docs/meta.md), and paste the sim numbers in the PR.
 
 ## Rules in one paragraph
 
